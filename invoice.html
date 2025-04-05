@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Item Entry Form</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.0/xlsx.full.min.js"></script>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      padding: 40px;
+      background: #f1f5f9;
+      color: #333;
+    }
+    .header {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin-bottom: 30px;
+    }
+    .header img {
+      height: 60px;
+    }
+    .datetime {
+      font-size: 16px;
+      color: #555;
+      margin-top: 8px;
+    }
+    h2 {
+      text-align: center;
+      margin-bottom: 10px;
+      color: #2c3e50;
+    }
+    table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0;
+      border-radius: 12px;
+      overflow: hidden;
+      background: white;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    }
+    th, td {
+      border: 1px solid #e0e0e0;
+      padding: 10px;
+      text-align: center;
+    }
+    th {
+      background: #e8f0fe;
+      font-weight: 600;
+    }
+    input[type="number"], input[type="text"] {
+      width: 90%;
+      padding: 6px 8px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      outline: none;
+      font-size: 13px;
+      transition: border 0.3s ease;
+      -moz-appearance: textfield;
+    }
+    input[type="number"]::-webkit-outer-spin-button,
+    input[type="number"]::-webkit-inner-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+    input[type="number"]:focus, input[type="text"]:focus {
+      border-color: #4a90e2;
+    }
+    #totalAmount {
+      font-weight: bold;
+      font-size: 18px;
+    }
+    .controls {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 20px;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .left-controls {
+      display: flex;
+      gap: 10px;
+    }
+    .right-controls {
+      margin-left: auto;
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+    .enter-button, .add-row-button, .print-button, .export-button, .save-button {
+      padding: 12px 20px;
+      background: #4a90e2;
+      color: white;
+      border: none;
+      cursor: pointer;
+      border-radius: 20px;
+      font-size: 14px;
+      transition: background 0.3s ease;
+    }
+    .enter-button:hover, .add-row-button:hover, .print-button:hover, .export-button:hover, .save-button:hover {
+      background: #3b7dc4;
+    }
+    .add-row-button {
+      background: #2ecc71;
+    }
+    .print-button {
+      background: #e67e22;
+    }
+    .export-button {
+      background: #9b59b6;
+    }
+    .save-button {
+      background: #2980b9;
+    }
+    @media print {
+      body * {
+        visibility: hidden;
+      }
+      #itemTable, #itemTable *, .header, .datetime {
+        visibility: visible;
+      }
+      #itemTable {
+        position: absolute;
+        left: 0;
+        top: 100px;
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <img src="https://img.freepik.com/premium-vector/shree-hindi-calligraphy-vector-art-vector-illustration-divine-grace_613074-357.jpg?w=740" alt="Logo" />
+    <div class="datetime" id="datetime"></div>
+  </div>
+  <h2>Invoice</h2>
+  <table id="itemTable">
+    <thead>
+      <tr>
+        <th>Sl. No</th>
+        <th>Item</th>
+        <th>Packet</th>
+        <th>Quantity</th>
+        <th>Rate</th>
+        <th>Hamali</th>
+        <th>Total</th>
+      </tr>
+    </thead>
+    <tbody id="itemTableBody">
+      <!-- rows inserted dynamically -->
+    </tbody>
+  </table>
+  <div class="controls">
+    <div class="left-controls">
+      <button class="add-row-button" onclick="addRow()">+ Add Row</button>
+      <button class="print-button" onclick="saveAndPrint()">🖨️ Print</button>
+      <button class="export-button" onclick="exportToExcel()">📊 Export to Excel</button>
+      <button class="save-button" onclick="exportToExcel()">💾 Save File</button>
+    </div>
+    <div class="right-controls">
+      <span id="totalAmount">Amount: 0</span>
+      <button class="enter-button" onclick="calculateTotals()">Enter</button>
+    </div>
+  </div>
+
+  <script>
+    let rowCount = 0;
+
+    function addRow() {
+      rowCount++;
+      const tbody = document.getElementById('itemTableBody');
+      const row = document.createElement('tr');
+      row.innerHTML = `
+        <td>${rowCount}</td>
+        <td><input type="text" name="item${rowCount}" /></td>
+        <td><input type="number" name="packet${rowCount}" min="0" step="1" /></td>
+        <td><input type="number" name="quantity${rowCount}" min="0" step="1" /></td>
+        <td><input type="number" name="rate${rowCount}" min="0" step="0.01" /></td>
+        <td><input type="number" name="hamali${rowCount}" min="0" step="0.01" /></td>
+        <td><span id="total${rowCount}">0</span></td>
+      `;
+      tbody.appendChild(row);
+    }
+
+    function calculateTotals() {
+      let grandTotal = 0;
+      for (let i = 1; i <= rowCount; i++) {
+        const quantity = parseFloat(document.querySelector(`[name='quantity${i}']`)?.value) || 0;
+        const rate = parseFloat(document.querySelector(`[name='rate${i}']`)?.value) || 0;
+        const hamaliRate = parseFloat(document.querySelector(`[name='hamali${i}']`)?.value) || 0;
+        const packets = parseFloat(document.querySelector(`[name='packet${i}']`)?.value) || 0;
+
+        const subTotal = quantity * rate;
+        const hamaliTotal = packets * hamaliRate;
+        const finalTotal = subTotal - hamaliTotal;
+
+        const totalElement = document.getElementById(`total${i}`);
+        if (totalElement) {
+          totalElement.textContent = finalTotal.toFixed(2);
+        }
+        grandTotal += finalTotal;
+      }
+      document.getElementById('totalAmount').textContent = `Amount: ${grandTotal.toFixed(2)}`;
+    }
+
+    function exportToExcel() {
+      const table = document.getElementById('itemTable');
+      const wb = XLSX.utils.table_to_book(table, { sheet: 'Invoice' });
+      const now = new Date();
+      const dateStr = now.toISOString().split('T')[0];
+      const timeStr = now.toTimeString().split(' ')[0].replace(/:/g, '-');
+      XLSX.writeFile(wb, `invoice_${dateStr}_${timeStr}.xlsx`);
+    }
+
+    function saveAndPrint() {
+      exportToExcel();
+      setTimeout(() => window.print(), 500);
+    }
+
+    function updateDateTime() {
+      const now = new Date();
+      document.getElementById('datetime').textContent = now.toLocaleString();
+    }
+
+    for (let i = 0; i < 5; i++) addRow();
+    updateDateTime();
+
+    document.addEventListener('keydown', function (event) {
+      if (event.ctrlKey && event.key === 'Enter') {
+        addRow();
+      }
+    });
+  </script>
+</body>
+</html>
