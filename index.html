@@ -3,143 +3,297 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Item Entry Form</title>
+  <title>Invoice</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.0/xlsx.full.min.js"></script>
   <style>
+    :root {
+      --primary-color: #4a90e2;
+      --success-color: #2ecc71;
+      --warning-color: #e67e22;
+      --dark-color: #2c3e50;
+      --light-color: #f1f5f9;
+      --border-color: #e0e0e0;
+      --text-color: #333;
+      --text-light: #555;
+    }
+    
     body {
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      padding: 40px;
-      background: #f1f5f9;
-      color: #333;
+      padding: 30px;
+      background: var(--light-color);
+      color: var(--text-color);
+      line-height: 1.5;
     }
+    
     .header {
       display: flex;
       flex-direction: column;
       align-items: center;
-      margin-bottom: 30px;
+      margin-bottom: 25px;
+      position: relative;
     }
-    .header img {
-      height: 60px;
+    
+    .header-text {
+      font-size: 24px;
+      margin-bottom: 10px;
+      color: darkorange;
     }
+    
+    .sub-header {
+      font-size: 18px;
+      margin-bottom: 10px;
+      font-weight: bold;
+    }
+    
     .datetime {
-      font-size: 16px;
-      color: #555;
-      margin-top: 8px;
+      font-size: 15px;
+      color: var(--text-light);
+      margin-top: 5px;
+      position: absolute;
+      right: 0;
+      top: 0;
+      font-weight: bold;
     }
+    
     h2 {
       text-align: center;
-      margin-bottom: 10px;
-      color: #2c3e50;
+      margin: 0 0 20px 0;
+      color: var(--dark-color);
+      font-size: 24px;
     }
+    
     table {
       width: 100%;
       border-collapse: separate;
       border-spacing: 0;
-      border-radius: 12px;
+      border-radius: 8px;
       overflow: hidden;
       background: white;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+      margin-bottom: 20px;
     }
+    
     th, td {
-      border: 1px solid #e0e0e0;
-      padding: 10px;
+      border: 1px solid var(--border-color);
+      padding: 12px 8px;
+      text-align: center;
+      vertical-align: middle;
+    }
+    
+    th {
+      background: #f8fafc;
+      font-weight: 600;
+      color: var(--dark-color);
+    }
+    
+    /* Column widths */
+    th:first-child, td:first-child {
+      width: 5%;
+    }
+    
+    th:not(:first-child), td:not(:first-child) {
+      width: calc(95% / 6);
+    }
+    
+    input[type="number"], 
+    input[type="text"] {
+      width: 90%;
+      padding: 8px 10px;
+      border: 1px solid #d1d5db;
+      border-radius: 6px;
+      outline: none;
+      font-size: 14px;
+      transition: all 0.2s ease;
+      -moz-appearance: textfield;
       text-align: center;
     }
-    th {
-      background: #e8f0fe;
-      font-weight: 600;
-    }
-    input[type="number"], input[type="text"] {
-      width: 90%;
-      padding: 6px 8px;
-      border: 1px solid #ccc;
-      border-radius: 8px;
-      outline: none;
-      font-size: 13px;
-      transition: border 0.3s ease;
-      -moz-appearance: textfield;
-    }
+    
     input[type="number"]::-webkit-outer-spin-button,
     input[type="number"]::-webkit-inner-spin-button {
       -webkit-appearance: none;
       margin: 0;
     }
-    input[type="number"]:focus, input[type="text"]:focus {
-      border-color: #4a90e2;
+    
+    input[type="number"]:focus, 
+    input[type="text"]:focus {
+      border-color: var(--primary-color);
+      box-shadow: 0 0 0 2px rgba(74, 144, 226, 0.2);
     }
+    
     #totalAmount {
       font-weight: bold;
       font-size: 18px;
+      color: var(--dark-color);
+      min-width: 150px;
+      display: inline-block;
+      text-align: right;
     }
+    
     .controls {
       display: flex;
       justify-content: space-between;
       align-items: center;
       margin-top: 20px;
       flex-wrap: wrap;
-      gap: 10px;
+      gap: 12px;
     }
-    .left-controls {
-      display: flex;
-      gap: 10px;
-    }
+    
+    .left-controls, 
     .right-controls {
-      margin-left: auto;
       display: flex;
-      gap: 10px;
-      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
     }
-    .enter-button, .add-row-button, .print-button, .export-button, .save-button {
-      padding: 12px 20px;
-      background: #4a90e2;
+    
+    .btn {
+      padding: 10px 20px;
       color: white;
       border: none;
       cursor: pointer;
-      border-radius: 20px;
+      border-radius: 6px;
       font-size: 14px;
-      transition: background 0.3s ease;
+      font-weight: 500;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      gap: 6px;
     }
-    .enter-button:hover, .add-row-button:hover, .print-button:hover, .export-button:hover, .save-button:hover {
-      background: #3b7dc4;
+    
+    .btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
     }
-    .add-row-button {
-      background: #2ecc71;
+    
+    .btn-primary {
+      background: var(--primary-color);
     }
-    .print-button {
-      background: #e67e22;
+    
+    .btn-success {
+      background: var(--success-color);
     }
-    .export-button {
-      background: #9b59b6;
+    
+    .btn-warning {
+      background: var(--warning-color);
     }
-    .save-button {
-      background: #2980b9;
+    
+    .btn-dark {
+      background: var(--dark-color);
     }
+    
     @media print {
-      body * {
-        visibility: hidden;
+      .controls {
+        display: none;
       }
-      #itemTable, #itemTable *, .header, .datetime {
+      
+      body {
         visibility: visible;
       }
-      #itemTable {
-        position: absolute;
-        left: 0;
-        top: 100px;
+      
+      /* Print styles for input fields */
+      input[type="text"],
+      input[type="number"] {
+        border: none;
+        background: transparent;
         width: 100%;
+        padding: 0;
+        text-align: center;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+      
+      input[type="text"]:focus,
+      input[type="number"]:focus {
+        outline: none;
+        box-shadow: none;
+      }
+      
+      /* Ensure table cells maintain their width */
+      th, td {
+        width: auto !important;
+      }
+    }
+    
+    @media screen and (max-width: 768px) {
+      body {
+        padding: 20px;
+      }
+      
+      table {
+        font-size: 13px;
+      }
+      
+      th, td {
+        padding: 10px 6px;
+      }
+      
+      input[type="number"], 
+      input[type="text"] {
+        padding: 6px 8px;
+        font-size: 13px;
+      }
+      
+      .header img {
+        height: 50px;
+      }
+      
+      .controls {
+        flex-direction: column;
+        align-items: stretch;
+      }
+      
+      .left-controls, 
+      .right-controls {
+        width: 100%;
+        justify-content: center;
+      }
+      
+      .right-controls {
+        margin-top: 10px;
+      }
+    }
+    
+    @media screen and (max-width: 480px) {
+      body {
+        padding: 15px;
+      }
+      
+      table {
+        font-size: 12px;
+      }
+      
+      th, td {
+        padding: 8px 4px;
+      }
+      
+      input[type="number"], 
+      input[type="text"] {
+        width: 85%;
+        padding: 5px;
+        font-size: 12px;
+      }
+      
+      .btn {
+        padding: 8px 12px;
+        font-size: 12px;
+      }
+      
+      #totalAmount {
+        font-size: 16px;
       }
     }
   </style>
 </head>
 <body>
   <div class="header">
-    <img src="https://img.freepik.com/premium-vector/shree-hindi-calligraphy-vector-art-vector-illustration-divine-grace_613074-357.jpg?w=740" alt="Logo" />
+    <div class="header-text">|ಶ್ರೀ|</div>
+    <div class="sub-header">G.V.Mahant Brothers</div>
     <div class="datetime" id="datetime"></div>
   </div>
   <h2>Invoice</h2>
   <table id="itemTable">
     <thead>
       <tr>
-        <th>Sl. No</th>
+        <th>Sl.No</th>
         <th>Item</th>
         <th>Packet</th>
         <th>Quantity</th>
@@ -154,19 +308,27 @@
   </table>
   <div class="controls">
     <div class="left-controls">
-      <button class="add-row-button" onclick="addRow()">+ Add Row</button>
-      <button class="print-button" onclick="saveAndPrint()">🖨️ Print</button>
-      <button class="export-button" onclick="exportToExcel()">📊 Export to Excel</button>
-      <button class="save-button" onclick="exportToExcel()">💾 Save File</button>
+      <button class="btn btn-success" onclick="addRow()">
+        <span>+</span> Add Row
+      </button>
+      <button class="btn btn-warning" onclick="saveAndPrint()">
+        <span>🖨️</span> Print
+      </button>
     </div>
     <div class="right-controls">
-      <span id="totalAmount">Amount: 0</span>
-      <button class="enter-button" onclick="calculateTotals()">Enter</button>
+      <span id="totalAmount">Amount: 0.00</span>
+      <button class="btn btn-primary" onclick="calculateTotals()">
+        Calculate
+      </button>
+      <button class="btn btn-dark" onclick="exportToExcel()">
+        <span>💾</span> Save
+      </button>
     </div>
   </div>
 
   <script>
     let rowCount = 0;
+    let allInvoices = [];
 
     function addRow() {
       rowCount++;
@@ -174,19 +336,31 @@
       const row = document.createElement('tr');
       row.innerHTML = `
         <td>${rowCount}</td>
-        <td><input type="text" name="item${rowCount}" /></td>
-        <td><input type="number" name="packet${rowCount}" min="0" step="1" /></td>
-        <td><input type="number" name="quantity${rowCount}" min="0" step="1" /></td>
-        <td><input type="number" name="rate${rowCount}" min="0" step="0.01" /></td>
-        <td><input type="number" name="hamali${rowCount}" min="0" step="0.01" /></td>
-        <td><span id="total${rowCount}">0</span></td>
+        <td><input type="text" name="item${rowCount}" placeholder="Item name" /></td>
+        <td><input type="number" name="packet${rowCount}" min="0" step="1" placeholder="0" /></td>
+        <td><input type="number" name="quantity${rowCount}" min="0" step="1" placeholder="0" /></td>
+        <td><input type="number" name="rate${rowCount}" min="0" step="0.01" placeholder="0.00" /></td>
+        <td><input type="number" name="hamali${rowCount}" min="0" step="0.01" placeholder="0.00" /></td>
+        <td><span id="total${rowCount}" class="item-total">0.00</span></td>
       `;
       tbody.appendChild(row);
+      
+      const inputs = row.getElementsByTagName('input');
+      if (inputs.length > 0) {
+        inputs[0].focus();
+      }
     }
 
     function calculateTotals() {
       let grandTotal = 0;
+      const currentInvoice = {
+        date: new Date().toLocaleString(),
+        items: [],
+        total: 0
+      };
+
       for (let i = 1; i <= rowCount; i++) {
+        const itemName = document.querySelector(`[name='item${i}']`)?.value || "Item";
         const quantity = parseFloat(document.querySelector(`[name='quantity${i}']`)?.value) || 0;
         const rate = parseFloat(document.querySelector(`[name='rate${i}']`)?.value) || 0;
         const hamaliRate = parseFloat(document.querySelector(`[name='hamali${i}']`)?.value) || 0;
@@ -201,35 +375,112 @@
           totalElement.textContent = finalTotal.toFixed(2);
         }
         grandTotal += finalTotal;
+
+        currentInvoice.items.push({
+          slNo: i,
+          item: itemName,
+          packet: packets,
+          quantity: quantity,
+          rate: rate,
+          hamali: hamaliRate,
+          total: finalTotal
+        });
       }
+
+      currentInvoice.total = grandTotal;
       document.getElementById('totalAmount').textContent = `Amount: ${grandTotal.toFixed(2)}`;
+      
+      return currentInvoice;
     }
 
     function exportToExcel() {
-      const table = document.getElementById('itemTable');
-      const wb = XLSX.utils.table_to_book(table, { sheet: 'Invoice' });
+      const currentInvoice = calculateTotals();
+      allInvoices.push(currentInvoice);
+      
+      // Create workbook
+      const wb = XLSX.utils.book_new();
+      const wsData = [];
+      
+      // Add headers
+      wsData.push(["Sl.No", "Item", "Packet", "Quantity", "Rate", "Hamali", "Total"]);
+      
+      // Add all invoices
+      allInvoices.forEach(invoice => {
+        // Add invoice separator
+        wsData.push([`----- Invoice from ${invoice.date} -----`]);
+        wsData.push([]);
+        
+        // Add invoice items
+        invoice.items.forEach(item => {
+          wsData.push([
+            item.slNo,
+            item.item,
+            item.packet,
+            item.quantity,
+            item.rate,
+            item.hamali,
+            item.total.toFixed(2)
+          ]);
+        });
+        
+        // Add invoice total
+        wsData.push([]);
+        wsData.push(["", "", "", "", "", "Total:", invoice.total.toFixed(2)]);
+        wsData.push([]);
+        wsData.push([]);
+      });
+      
+      // Create worksheet
+      const ws = XLSX.utils.aoa_to_sheet(wsData);
+      
+      // Add worksheet to workbook
+      XLSX.utils.book_append_sheet(wb, ws, "All Invoices");
+      
+      // Generate Excel file
       const now = new Date();
       const dateStr = now.toISOString().split('T')[0];
-      const timeStr = now.toTimeString().split(' ')[0].replace(/:/g, '-');
-      XLSX.writeFile(wb, `invoice_${dateStr}_${timeStr}.xlsx`);
+      XLSX.writeFile(wb, `GVMahant_Invoices_${dateStr}.xlsx`);
     }
 
     function saveAndPrint() {
-      exportToExcel();
-      setTimeout(() => window.print(), 500);
+      window.print();
     }
 
     function updateDateTime() {
       const now = new Date();
-      document.getElementById('datetime').textContent = now.toLocaleString();
+      const options = { 
+        weekday: 'long', 
+        year: 'numeric', 
+        month: 'long', 
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      };
+      document.getElementById('datetime').textContent = now.toLocaleDateString('en-US', options);
     }
 
-    for (let i = 0; i < 5; i++) addRow();
+    // Initialize with 3 empty rows
+    for (let i = 0; i < 3; i++) addRow();
     updateDateTime();
+    setInterval(updateDateTime, 60000);
 
+    // Keyboard shortcuts
     document.addEventListener('keydown', function (event) {
       if (event.ctrlKey && event.key === 'Enter') {
         addRow();
+      }
+      if (event.key === 'Enter') {
+        const activeElement = document.activeElement;
+        if (activeElement && activeElement.tagName === 'INPUT') {
+          calculateTotals();
+        }
+      }
+    });
+
+    // Auto-calculate when leaving input fields
+    document.addEventListener('focusout', function(event) {
+      if (event.target.tagName === 'INPUT') {
+        calculateTotals();
       }
     });
   </script>
