@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Shoot Calculation</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.0/xlsx.full.min.js"></script>
+  <style>
+    :root {
+      --primary-color: #4a90e2;
+      --success-color: #2ecc71;
+      --warning-color: #e67e22;
+      --dark-color: #2c3e50;
+      --light-color: #f8fafc;
+      --border-color: #e0e0e0;
+      --text-color: #333;
+      --text-light: #555;
+      --font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      --font-size-base: 14px;
+      --shadow: 0 2px 4px rgba(0,0,0,0.1);
+      --radius: 8px;
+    }
+    
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: var(--font-family);
+      padding: 2rem;
+      background: var(--light-color);
+      color: var(--text-color);
+      line-height: 1.5;
+      font-size: var(--font-size-base);
+      max-width: 1500px;
+      margin: 0 auto;
+    }
+    
+    .header {
+      text-align: center;
+      margin-bottom: 2rem;
+      padding: 1.5rem;
+      background: white;
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+    }
+    
+    .header-text {
+      font-size: 2rem;
+      font-weight: bold;
+      color: var(--dark-color);
+      margin-bottom: 0.5rem;
+    }
+    
+    .sub-header {
+      font-size: 1.5rem;
+      color: var(--text-light);
+      margin-bottom: 0.5rem;
+    }
+    
+    .datetime {
+      color: var(--primary-color);
+      font-size: 1rem;
+    }
+    
+    .top-controls {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 2rem;
+      gap: 1rem;
+    }
+    
+    .invoice-btn-container {
+      position: relative;
+    }
+    
+    .btn {
+      padding: 0.75rem 1.5rem;
+      border: none;
+      border-radius: var(--radius);
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    
+    .btn-primary {
+      background: var(--primary-color);
+      color: white;
+    }
+    
+    .btn-success {
+      background: var(--success-color);
+      color: white;
+    }
+    
+    .btn-warning {
+      background: var(--warning-color);
+      color: white;
+    }
+    
+    .btn:hover {
+      opacity: 0.9;
+      transform: translateY(-1px);
+    }
+    
+    .invoice-dropdown-content {
+      display: none;
+      position: absolute;
+      top: 100%;
+      left: 0;
+      background: white;
+      min-width: 160px;
+      box-shadow: var(--shadow);
+      border-radius: var(--radius);
+      z-index: 1;
+    }
+    
+    .invoice-dropdown-content.show {
+      display: block;
+    }
+    
+    .invoice-dropdown-content a {
+      color: var(--text-color);
+      padding: 0.75rem 1rem;
+      text-decoration: none;
+      display: block;
+    }
+    
+    .invoice-dropdown-content a:hover {
+      background: var(--light-color);
+    }
+    
+    .customer-section {
+      background: white;
+      padding: 1.5rem;
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      margin-bottom: 2rem;
+    }
+    
+    .customer-section label {
+      display: block;
+      margin-bottom: 0.5rem;
+      font-weight: 600;
+    }
+    
+    .customer-section input {
+      width: 100%;
+      padding: 0.75rem;
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius);
+      font-size: 1rem;
+    }
+    
+    .invoice-container {
+      background: white;
+      padding: 1.5rem;
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      margin-bottom: 2rem;
+      overflow-x: auto;
+    }
+    
+    .invoice-table h3 {
+      color: var(--dark-color);
+      margin-bottom: 1.5rem;
+    }
+    
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 1rem;
+      background: white;
+    }
+    
+    th, td {
+      padding: 1rem;
+      text-align: left;
+      border-bottom: 1px solid var(--border-color);
+      vertical-align: middle;
+    }
+    
+    th {
+      background: var(--light-color);
+      font-weight: 600;
+      color: var(--dark-color);
+      white-space: nowrap;
+      position: sticky;
+      top: 0;
+    }
+    
+    td input {
+      width: 100%;
+      padding: 0.5rem;
+      border: 1px solid var(--border-color);
+      border-radius: 4px;
+      font-size: 0.9rem;
+    }
+    
+    .controls-container {
+      background: white;
+      padding: 1.5rem;
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+    }
+    
+    .controls {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 2rem;
+    }
+    
+    .controls-center {
+      display: flex;
+      gap: 1rem;
+    }
+    
+    .controls-right {
+      display: flex;
+      align-items: center;
+      gap: 2rem;
+    }
+    
+    .kata-input-container {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+    
+    .kata-input-container label {
+      font-weight: 600;
+    }
+    
+    .kata-input-container input {
+      width: 120px;
+      padding: 0.5rem;
+      border: 1px solid var(--border-color);
+      border-radius: 4px;
+    }
+    
+    #totalAmount {
+      font-size: 1.2rem;
+      font-weight: 600;
+      color: var(--dark-color);
+    }
+    
+    @media (max-width: 1024px) {
+      .controls {
+        flex-direction: column;
+        gap: 1rem;
+      }
+      
+      .controls-right {
+        flex-direction: column;
+        align-items: stretch;
+      }
+    }
+    
+    @media print {
+      body {
+        padding: 0;
+      }
+      .controls-container,
+      .top-controls {
+        display: none !important;
+      }
+      .header,
+      .customer-section,
+      .invoice-container,
+      .invoice-table,
+      table,
+      .kata-input-container {
+        box-shadow: none;
+        margin: 0;
+        width: 100%;
+        page-break-inside: avoid;
+      }
+      #shootTable {
+        width: 100%;
+        border-collapse: collapse;
+      }
+      #shootTable th,
+      #shootTable td {
+        border: 1px solid #000;
+        padding: 4px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="header-text">|ಶ್ರೀ|</div>
+    <div class="sub-header">G.V.Mahant Brothers</div>
+    <div class="datetime" id="datetime"></div>
+  </div>
+
+  <div class="top-controls">
+    <div style="text-align: center; width: 100%;">
+      <div class="button-group" style="display: inline-flex; gap: 10px;">
+        <button class="btn btn-primary" onclick="window.location.href='indexv1.html'">
+          <span></span>Invoice
+        </button>
+        <button class="btn btn-primary" onclick="handleKata()">
+          <span></span>Kata
+        </button>
+        <button class="btn btn-primary" onclick="window.location.href='barthe.html'">
+          <span></span>Barthe
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="customer-section" style="max-width: 300px; margin: 1rem 0;">
+    <label for="customerName">Customer Name:</label>
+    <input type="text" id="customerName" placeholder="Enter customer name" />
+  </div>
+  
+  <div class="invoice-container">
+    <div class="invoice-table">
+      <h3>Shoot Calculation</h3>
+      <table id="shootTable">
+        <thead>
+          <tr>
+            <th style="width: 5%">Sl.No</th>
+            <th style="width: 20%">Item</th>
+            <th style="width: 12%">Net Weight</th>
+            <th style="width: 12%">Shoot %</th>
+            <th style="width: 12%">Final Weight</th>
+            <th style="width: 12%">Rate</th>
+            <th style="width: 9%">Packets</th>
+            <th style="width: 9%">Hamali Rate</th>
+            <th style="width: 9%">Final Amount</th>
+          </tr>
+        </thead>
+        <tbody id="shootTableBody">
+          <!-- rows inserted dynamically -->
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="controls-container">
+    <div class="controls">
+      <div class="controls-center">
+        <button class="btn btn-success" onclick="addRow()">
+          <span>+</span> Add Row
+        </button>
+        <button class="btn btn-warning" onclick="saveAndPrint()">
+          <span>🖨️</span> Print Invoice
+        </button>
+        <button class="btn btn-primary" onclick="exportToExcel()">
+          <span>💾</span> Save
+        </button>
+      </div>
+      
+      <div class="controls-right">
+        <div class="kata-input-container">
+          <label for="kataAmount">Kata Amount:</label>
+          <input type="number" id="kataAmount" min="0" step="0.01" value="0" oninput="calculateTotals()" />
+        </div>
+        <span id="totalAmount">Amount: ₹0.00</span>
+        <button class="btn btn-primary" onclick="calculateTotals()">
+          <span>🔄</span> Calculate
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let rowCount = 0;
+    let allInvoices = [];
+
+    function formatCurrency(amount) {
+      return new Intl.NumberFormat('en-IN', {
+        style: 'currency',
+        currency: 'INR',
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+      }).format(amount);
+    }
+
+    function formatNumber(number) {
+      return new Intl.NumberFormat('en-IN', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+      }).format(number);
+    }
+
+    function loadInvoices() {
+      const today = new Date().toISOString().split('T')[0];
+      const storedInvoices = localStorage.getItem(`shoot_invoices_${today}`);
+      if (storedInvoices) {
+        allInvoices = JSON.parse(storedInvoices);
+      }
+    }
+
+    function saveInvoices() {
+      const today = new Date().toISOString().split('T')[0];
+      localStorage.setItem(`shoot_invoices_${today}`, JSON.stringify(allInvoices));
+    }
+
+    function addRow() {
+      rowCount++;
+      const shootTbody = document.getElementById('shootTableBody');
+      const shootRow = document.createElement('tr');
+      shootRow.innerHTML = `
+        <td class="text-center">${rowCount}</td>
+        <td><input type="text" name="shootItem${rowCount}" placeholder="Enter item name" /></td>
+        <td><input type="number" name="netWeight${rowCount}" min="0" step="0.01" placeholder="0.00" oninput="calculateRow(${rowCount})" /></td>
+        <td><input type="number" name="shootRate${rowCount}" min="0" step="0.01" placeholder="0.00" oninput="calculateRow(${rowCount})" /></td>
+        <td><span id="finalWeight${rowCount}" class="calculated-value">0.00</span></td>
+        <td><input type="number" name="shootFinalRate${rowCount}" min="0" step="0.01" placeholder="0.00" oninput="calculateRow(${rowCount})" /></td>
+        <td style="display: none;"><span id="amount${rowCount}" class="calculated-value">₹0.00</span></td>
+        <td><span id="packets${rowCount}" class="calculated-value">0.00</span></td>
+        <td><input type="number" name="shootHamaliRate${rowCount}" min="0" step="0.01" placeholder="0.00" oninput="calculateRow(${rowCount})" /></td>
+        <td><span id="shootTotal${rowCount}" class="calculated-value item-total">₹0.00</span></td>
+      `;
+      shootTbody.appendChild(shootRow);
+      
+      const inputs = shootRow.getElementsByTagName('input');
+      if (inputs.length > 0) {
+        inputs[0].focus();
+      }
+    }
+
+    function calculateRow(rowNum) {
+      const netWeight = parseFloat(document.querySelector(`[name='netWeight${rowNum}']`)?.value) || 0;
+      const shootRate = parseFloat(document.querySelector(`[name='shootRate${rowNum}']`)?.value) || 0;
+      const rate = parseFloat(document.querySelector(`[name='shootFinalRate${rowNum}']`)?.value) || 0;
+      const hamaliRate = parseFloat(document.querySelector(`[name='shootHamaliRate${rowNum}']`)?.value) || 0;
+
+      // Calculate multiplied weight = (Net Weight × Shoot Rate) ÷ 100
+      const multipliedWeight = (netWeight * shootRate) / 100;
+      // Calculate final weight = net weight - multiplied weight
+      const finalWeight = netWeight - multipliedWeight;
+      // Calculate amount = Final Weight × Rate
+      const amount = finalWeight * rate;
+      // Calculate packets = Net Weight ÷ 60
+      const packets = netWeight / 60;
+      // Calculate hamali total = Packets × Hamali Rate
+      const hamaliTotal = packets * hamaliRate;
+      
+      const kataAmount = parseFloat(document.getElementById('kataAmount').value) || 0;
+      // Calculate final amount = Amount - Hamali Total - Kata
+      const finalTotal = amount - hamaliTotal - kataAmount;
+
+      // Update all display fields with formatted values
+      document.getElementById(`finalWeight${rowNum}`).textContent = formatNumber(finalWeight);
+      document.getElementById(`amount${rowNum}`).textContent = formatCurrency(amount);
+      document.getElementById(`packets${rowNum}`).textContent = formatNumber(packets);
+      document.getElementById(`shootTotal${rowNum}`).textContent = formatCurrency(finalTotal);
+
+      calculateTotals();
+    }
+
+    function calculateTotals() {
+      let grandTotal = 0;
+      const currentInvoice = {
+        date: new Date().toLocaleString('en-IN'),
+        customerName: document.getElementById('customerName').value || "Unknown Customer",
+        items: [],
+        total: 0,
+        kata: parseFloat(document.getElementById('kataAmount').value) || 0
+      };
+
+      for (let i = 1; i <= rowCount; i++) {
+        const itemName = document.querySelector(`[name='shootItem${i}']`)?.value || "";
+        if (!itemName) continue;
+
+        const netWeight = parseFloat(document.querySelector(`[name='netWeight${i}']`)?.value) || 0;
+        const shootRate = parseFloat(document.querySelector(`[name='shootRate${i}']`)?.value) || 0;
+        const rate = parseFloat(document.querySelector(`[name='shootFinalRate${i}']`)?.value) || 0;
+        const hamaliRate = parseFloat(document.querySelector(`[name='shootHamaliRate${i}']`)?.value) || 0;
+
+        const multipliedWeight = (netWeight * shootRate) / 100;
+        const finalWeight = netWeight - multipliedWeight;
+        const amount = finalWeight * rate;
+        const packets = netWeight / 60;
+        const hamaliTotal = packets * hamaliRate;
+        const kataAmount = currentInvoice.kata;
+        const finalTotal = amount - hamaliTotal - kataAmount;
+
+        grandTotal += finalTotal;
+
+        currentInvoice.items.push({
+          slNo: i,
+          item: itemName,
+          netWeight: netWeight,
+          shootRate: shootRate,
+          finalWeight: finalWeight,
+          rate: rate,
+          packets: packets,
+          hamaliRate: hamaliRate,
+          total: finalTotal
+        });
+      }
+
+      currentInvoice.total = grandTotal;
+      document.getElementById('totalAmount').textContent = `Amount: ${formatCurrency(grandTotal)}`;
+      return currentInvoice;
+    }
+
+    function exportToExcel() {
+      const currentInvoice = calculateTotals();
+      allInvoices.push(currentInvoice);
+      saveInvoices();
+      
+      const wb = XLSX.utils.book_new();
+      const wsData = [];
+      
+      // Add header with company name and date
+      wsData.push(["G.V.Mahant Brothers - Shoot Calculation"]);
+      wsData.push(["Customer Name:", currentInvoice.customerName]);
+      wsData.push(["Date:", currentInvoice.date]);
+      wsData.push([]);
+      
+      // Add table headers
+      wsData.push(["Sl.No", "Item", "Net Weight", "Shoot %", "Final Weight", "Rate", "Packets", "Hamali Rate", "Final Amount"]);
+      
+      // Add items
+      currentInvoice.items.forEach(item => {
+        wsData.push([
+          item.slNo,
+          item.item,
+          formatNumber(item.netWeight),
+          formatNumber(item.shootRate),
+          formatNumber(item.finalWeight),
+          formatNumber(item.rate),
+          formatNumber(item.packets),
+          formatNumber(item.hamaliRate),
+          formatCurrency(item.total)
+        ]);
+      });
+      
+      // Add summary
+      wsData.push([]);
+      wsData.push(["", "", "", "", "", "", "", "", "Subtotal:", formatCurrency(currentInvoice.total)]);
+      wsData.push(["", "", "", "", "", "", "", "", "Kata:", formatCurrency(currentInvoice.kata)]);
+      wsData.push(["", "", "", "", "", "", "", "", "Final Total:", formatCurrency(currentInvoice.total - currentInvoice.kata)]);
+      
+      const ws = XLSX.utils.aoa_to_sheet(wsData);
+      
+      // Style the worksheet
+      ws['!cols'] = [
+        {wch: 6},  // Sl.No
+        {wch: 20}, // Item
+        {wch: 12}, // Net Weight
+        {wch: 10}, // Shoot
+        {wch: 12}, // Final Weight
+        {wch: 10}, // Rate
+        {wch: 10}, // Packets
+        {wch: 12}, // Hamali Rate
+        {wch: 15}  // Final Amount
+      ];
+      
+      XLSX.utils.book_append_sheet(wb, ws, "Shoot Invoice");
+      
+      const today = new Date().toISOString().split('T')[0];
+      XLSX.writeFile(wb, `GVMahant_Shoot_Invoice_${today}.xlsx`);
+    }
+
+    function saveAndPrint() {
+      calculateTotals(); // Ensure all calculations are up to date
+      window.print();
+    }
+
+    function updateDateTime() {
+      const now = new Date();
+      const options = { 
+        weekday: 'long', 
+        year: 'numeric', 
+        month: 'long', 
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      };
+      document.getElementById('datetime').textContent = now.toLocaleDateString('en-IN', options);
+    }
+
+    function toggleInvoiceDropdown() {
+      const dropdown = document.getElementById('invoiceDropdown');
+      dropdown.classList.toggle('show');
+    }
+
+    function switchTemplate() {
+      window.location.href = 'bharti.html';
+    }
+
+    // Close dropdown when clicking outside
+    window.addEventListener('click', function(event) {
+      const dropdown = document.getElementById('invoiceDropdown');
+      const button = document.querySelector('.invoice-btn');
+      if (!button.contains(event.target) && !dropdown.contains(event.target)) {
+        dropdown.classList.remove('show');
+      }
+    });
+
+    // Initialize with 3 empty rows and load existing invoices
+    loadInvoices();
+    for (let i = 0; i < 3; i++) addRow();
+    updateDateTime();
+    setInterval(updateDateTime, 60000);
+
+    // Keyboard shortcuts
+    document.addEventListener('keydown', function (event) {
+      if (event.ctrlKey && event.key === 'Enter') {
+        addRow();
+      }
+      if (event.key === 'Enter') {
+        const activeElement = document.activeElement;
+        if (activeElement && activeElement.tagName === 'INPUT') {
+          calculateTotals();
+        }
+      }
+    });
+
+    // Auto-calculate when leaving input fields
+    document.addEventListener('focusout', function(event) {
+      if (event.target.tagName === 'INPUT') {
+        calculateTotals();
+      }
+    });
+  </script>
+</body>
+</html>

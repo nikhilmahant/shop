@@ -1,0 +1,822 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Invoice</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.0/xlsx.full.min.js"></script>
+  <style>
+    :root {
+      --primary-color: #4a90e2;
+      --success-color: #2ecc71;
+      --warning-color: #e67e22;
+      --dark-color: #2c3e50;
+      --light-color: #f1f5f9;
+      --border-color: #e0e0e0;
+      --text-color: #333;
+      --text-light: #555;
+      --font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      --font-size-base: 14px;
+    }
+    
+    body {
+      font-family: var(--font-family);
+      padding: 30px;
+      background: var(--light-color);
+      color: var(--text-color);
+      line-height: 1.5;
+      font-size: var(--font-size-base);
+    }
+    
+    .header {
+      text-align: center;
+      margin-bottom: 20px;
+      position: relative;
+      padding: 10px;
+    }
+    
+    .datetime {
+      font-size: var(--font-size-base);
+      color: var(--text-light);
+      margin-top: 15px;
+      margin-bottom: 10px;
+      font-weight: bold;
+    }
+    
+    .controls-container {
+      border-top: 1px solid #eee;
+      padding: 15px;
+      margin-top: 20px;
+      background: #f9f9f9;
+    }
+    
+    .controls {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 15px;
+      margin: 10px 20px;
+    }
+    
+    .controls-left, .controls-center, .controls-right {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    
+    .controls-center {
+      flex-grow: 1;
+      justify-content: center;
+    }
+    
+    .invoice-container {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      margin-bottom: 20px;
+    }
+    
+    .invoice-header {
+      display: flex;
+      gap: 20px;
+      align-items: flex-start;
+    }
+    
+    .invoice-table {
+      flex: 1;
+      min-width: 0;
+      max-width: 1500px;
+      margin: 0 auto;
+    }
+    
+    .customer-section {
+      width: 320px;
+      padding: 15px;
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+      margin-bottom: 20px;
+    }
+    
+    .customer-section label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 600;
+      color: var(--dark-color);
+    }
+    
+    .customer-section input {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      font-size: var(--font-size-base);
+      transition: all 0.2s ease;
+    }
+    
+    .customer-section input:focus {
+      border-color: var(--primary-color);
+      box-shadow: 0 0 0 2px rgba(74, 144, 226, 0.2);
+      outline: none;
+    }
+    
+    .header-text {
+      font-size: 24px;
+      margin-bottom: 10px;
+      color: darkorange;
+    }
+    
+    .sub-header {
+      font-size: 18px;
+      margin-bottom: 10px;
+      font-weight: bold;
+    }
+    
+    .top-controls {
+      display: flex;
+      justify-content: center;
+      padding: 10px;
+      margin: 5px 0 15px 0;
+      gap: 10px;
+    }
+    
+    .invoice-btn-container {
+      position: relative;
+      text-align: center;
+      width: 150px;
+    }
+    
+    .invoice-btn {
+      background: var(--primary-color);
+      padding: 10px 20px;
+      font-size: 14px;
+      font-weight: 500;
+      width: 100%;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+    
+    .invoice-btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    }
+    
+    .invoice-dropdown-content {
+      position: absolute;
+      top: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      background-color: white;
+      width: 100%;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+      z-index: 1;
+      display: none;
+      border-radius: 4px;
+      margin-top: 4px;
+    }
+    
+    .invoice-dropdown-content a {
+      padding: 8px 12px;
+      font-size: 14px;
+    }
+    
+    table {
+      width: 98%;
+      border-collapse: separate;
+      border-spacing: 0;
+      border-radius: 8px;
+      overflow: hidden;
+      background: white;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+      margin: 0 auto 20px;
+      table-layout: fixed;
+      font-family: var(--font-family);
+      font-size: var(--font-size-base);
+    }
+    
+    th, td {
+      border: 1px solid var(--border-color);
+      padding: 12px 10px;
+      text-align: center;
+      vertical-align: middle;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      font-family: var(--font-family);
+      font-size: var(--font-size-base);
+    }
+    
+    th {
+      background: #f8fafc;
+      font-weight: 600;
+      color: var(--dark-color);
+      padding: 14px 8px;
+      font-family: var(--font-family);
+      font-size: var(--font-size-base);
+    }
+    
+    th:first-child {
+      width: 5%;
+    }
+    
+    th:nth-child(2) {
+      width: 18%;
+    }
+    
+    th:nth-child(3),
+    th:nth-child(4),
+    th:nth-child(5),
+    th:nth-child(6),
+    th:nth-child(7),
+    th:nth-child(8) {
+      width: 12%;
+    }
+    
+    th:last-child {
+      width: 14%;
+    }
+    
+    tr:nth-child(even) {
+      background-color: #f9fafb;
+    }
+    
+    tr:hover {
+      background-color: #f3f4f6;
+    }
+    
+    input[type="number"], 
+    input[type="text"] {
+      width: 95%;
+      padding: 8px 10px;
+      border: 1px solid #d1d5db;
+      border-radius: 6px;
+      outline: none;
+      font-family: var(--font-family);
+      font-size: var(--font-size-base);
+      transition: all 0.2s ease;
+      -moz-appearance: textfield;
+      text-align: center;
+      background: transparent;
+    }
+    
+    input[type="number"]:focus, 
+    input[type="text"]:focus {
+      border-color: var(--primary-color);
+      box-shadow: 0 0 0 2px rgba(74, 144, 226, 0.2);
+      background: white;
+    }
+    
+    /* Numeric value alignment */
+    td span {
+      display: block;
+      text-align: right;
+      padding-right: 12px;
+      font-family: var(--font-family);
+      font-size: var(--font-size-base);
+    }
+    
+    /* Amount and Final Amount columns */
+    td:nth-child(6) span,
+    td:last-child span {
+      font-weight: 600;
+      color: var(--dark-color);
+      font-family: var(--font-family);
+      font-size: var(--font-size-base);
+    }
+    
+    /* Header row sticky position */
+    thead {
+      position: sticky;
+      top: 0;
+      z-index: 1;
+    }
+    
+    thead th {
+      position: sticky;
+      top: 0;
+      background: #f8fafc;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+    }
+    
+    /* Improved row spacing */
+    tbody tr {
+      height: 46px;
+    }
+    
+    /* Improved input spacing */
+    td input {
+      margin: 2px auto;
+      display: block;
+    }
+    
+    #totalAmount {
+      font-family: var(--font-family);
+      font-size: var(--font-size-base);
+      font-weight: 600;
+      margin-right: 15px;
+      border-left: 1px solid #ddd;
+      padding-left: 15px;
+    }
+    
+    .template-switch {
+      background-color: #4CAF50;
+      color: white;
+      padding: 8px 15px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      transition: all 0.3s ease;
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      appearance: none;
+    }
+    
+    .template-switch:hover {
+      background-color: #45a049;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+    }
+    
+    .btn {
+      padding: 10px 20px;
+      color: white;
+      border: none;
+      cursor: pointer;
+      border-radius: 6px;
+      font-size: 14px;
+      font-weight: 500;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    
+    .btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    }
+    
+    .btn-primary {
+      background: var(--primary-color);
+    }
+    
+    .btn-success {
+      background: var(--success-color);
+    }
+    
+    .btn-warning {
+      background: var(--warning-color);
+    }
+    
+    .btn-dark {
+      background: var(--dark-color);
+    }
+    
+    .controls-right {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      justify-content: flex-end;
+    }
+    
+    .kata-input-container {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding-right: 15px;
+      border-right: 1px solid #ddd;
+    }
+    
+    .kata-input-container label {
+      white-space: nowrap;
+      font-size: 14px;
+    }
+    
+    .kata-input-container input {
+      width: 100px;
+      padding: 6px 10px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+    }
+    
+    .calculate-btn {
+      min-width: 100px;
+    }
+    
+    @media print {
+      .controls {
+        display: none;
+      }
+      
+      body {
+        visibility: visible;
+      }
+      
+      input[type="text"],
+      input[type="number"] {
+        border: none;
+        background: transparent;
+        width: 100%;
+        padding: 0;
+        text-align: center;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+      
+      input[type="text"]:focus,
+      input[type="number"]:focus {
+        outline: none;
+        box-shadow: none;
+      }
+      
+      th, td {
+        width: auto !important;
+      }
+    }
+    
+    @media screen and (max-width: 768px) {
+      body {
+        padding: 20px;
+      }
+      
+      table {
+        font-size: 13px;
+      }
+      
+      th, td {
+        padding: 10px 6px;
+      }
+      
+      input[type="number"], 
+      input[type="text"] {
+        padding: 6px 8px;
+        font-size: 13px;
+      }
+      
+      .header img {
+        height: 50px;
+      }
+      
+      .controls {
+        flex-direction: column;
+        align-items: stretch;
+      }
+      
+      .left-controls, 
+      .right-controls {
+        width: 100%;
+        justify-content: center;
+      }
+      
+      .right-controls {
+        margin-top: 10px;
+      }
+      
+      .invoice-container {
+        flex-direction: column;
+      }
+      
+      .invoice-header {
+        flex-direction: column;
+      }
+      
+      .customer-section {
+        width: 100%;
+      }
+    }
+    
+    @media screen and (max-width: 480px) {
+      body {
+        padding: 15px;
+      }
+      
+      table {
+        font-size: 12px;
+      }
+      
+      th, td {
+        padding: 8px 4px;
+      }
+      
+      input[type="number"], 
+      input[type="text"] {
+        width: 85%;
+        padding: 5px;
+        font-size: 12px;
+      }
+      
+      .btn {
+        padding: 8px 12px;
+        font-size: 12px;
+      }
+      
+      #totalAmount {
+        font-size: 16px;
+      }
+    }
+    
+    .controls-left {
+      display: none;
+    }
+    
+    th:not(:first-child), td:not(:first-child) {
+      width: calc(95% / 7); /* Adjusted for 8 columns */
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="header-text">|ಶ್ರೀ|</div>
+    <div class="sub-header">G.V.Mahant Brothers</div>
+    <div class="datetime" id="datetime"></div>
+  </div>
+
+  <div class="top-controls">
+    <div class="invoice-btn-container">
+      <button class="btn btn-primary invoice-btn" onclick="toggleInvoiceDropdown()">Invoice</button>
+      <div id="invoiceDropdown" class="invoice-dropdown-content">
+        <a href="#" onclick="saveInvoice()">Save Invoice</a>
+        <a href="#" onclick="loadInvoice()">Load Invoice</a>
+      </div>
+    </div>
+    <button class="template-switch" onclick="switchTemplate()">Switch to Barthe Template</button>
+  </div>
+
+  <div class="customer-section">
+    <label for="customerName">Customer Name:</label>
+    <input type="text" id="customerName" placeholder="Enter customer name" />
+  </div>
+  
+  <div class="invoice-container">
+    <div class="invoice-table">
+      <table id="itemTable">
+        <thead>
+          <tr>
+            <th>Sl.No</th>
+            <th>Item</th>
+            <th>Packet</th>
+            <th>Weight</th>
+            <th>Quantity</th>
+            <th>Rate</th>
+            <th>Hamali Rate</th>
+            <th>Total</th>
+          </tr>
+        </thead>
+        <tbody id="itemTableBody">
+          <!-- rows inserted dynamically -->
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="controls-container">
+    <div class="controls">
+      <div class="controls-center">
+        <button class="btn btn-success" onclick="addRow()">
+          <span>+</span> Add Row
+        </button>
+        <button class="btn btn-warning" onclick="saveAndPrint()">
+          <span>🖨️</span> Print
+        </button>
+      </div>
+      
+      <div class="controls-right">
+        <div class="kata-input-container">
+          <label for="kataAmount">Kata Amount:</label>
+          <input type="number" id="kataAmount" min="0" step="0.01" value="0" oninput="calculateTotals()" />
+        </div>
+        <span id="totalAmount">Amount: 0.00</span>
+        <button class="btn btn-primary" onclick="calculateTotals()">
+          Calculate
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let rowCount = 0;
+    let allInvoices = [];
+
+    // Load existing invoices from localStorage
+    function loadInvoices() {
+      const today = new Date().toISOString().split('T')[0];
+      const storedInvoices = localStorage.getItem(`invoices_${today}`);
+      if (storedInvoices) {
+        allInvoices = JSON.parse(storedInvoices);
+      }
+    }
+
+    // Save invoices to localStorage
+    function saveInvoices() {
+      const today = new Date().toISOString().split('T')[0];
+      localStorage.setItem(`invoices_${today}`, JSON.stringify(allInvoices));
+    }
+
+    function addRow() {
+      rowCount++;
+      const tbody = document.getElementById('itemTableBody');
+      const row = document.createElement('tr');
+      row.innerHTML = `
+        <td>${rowCount}</td>
+        <td><input type="text" name="item${rowCount}" placeholder="Item name" /></td>
+        <td><input type="number" name="packet${rowCount}" min="0" step="1" placeholder="0" oninput="calculateRow(${rowCount})" /></td>
+        <td><input type="number" name="weight${rowCount}" min="0" step="0.01" placeholder="0.00" oninput="calculateRow(${rowCount})" /></td>
+        <td><input type="number" name="quantity${rowCount}" min="0" step="0.01" placeholder="0.00" readonly /></td>
+        <td><input type="number" name="rate${rowCount}" min="0" step="0.01" placeholder="0.00" oninput="calculateRow(${rowCount})" /></td>
+        <td><input type="number" name="hamaliRate${rowCount}" min="0" step="0.01" placeholder="0.00" oninput="calculateRow(${rowCount})" /></td>
+        <td><span id="total${rowCount}" class="item-total">0.00</span></td>
+      `;
+      tbody.appendChild(row);
+      
+      const inputs = row.getElementsByTagName('input');
+      if (inputs.length > 0) {
+        inputs[0].focus();
+      }
+    }
+
+    function calculateRow(rowNum) {
+      const packets = parseFloat(document.querySelector(`[name='packet${rowNum}']`)?.value) || 0;
+      const weight = parseFloat(document.querySelector(`[name='weight${rowNum}']`)?.value) || 0;
+      const rate = parseFloat(document.querySelector(`[name='rate${rowNum}']`)?.value) || 0;
+      const hamaliRate = parseFloat(document.querySelector(`[name='hamaliRate${rowNum}']`)?.value) || 0;
+
+      // Calculate quantity (packets × weight)
+      const quantity = packets * weight;
+      // Calculate hamali (packets × hamali rate)
+      const hamali = packets * hamaliRate;
+      // Calculate amount (quantity × rate)
+      const amount = quantity * rate;
+      // Calculate final total (amount - hamali)
+      const finalTotal = amount - hamali;
+
+      const quantityInput = document.querySelector(`[name='quantity${rowNum}']`);
+      const totalElement = document.getElementById(`total${rowNum}`);
+      if (quantityInput) quantityInput.value = quantity.toFixed(2);
+      if (totalElement) totalElement.textContent = finalTotal.toFixed(2);
+
+      calculateTotals(); // Update grand total
+    }
+
+    function calculateTotals() {
+      let grandTotal = 0;
+      const currentInvoice = {
+        date: new Date().toLocaleString(),
+        customerName: document.getElementById('customerName').value || "Unknown Customer",
+        items: [],
+        total: 0
+      };
+
+      for (let i = 1; i <= rowCount; i++) {
+        const itemName = document.querySelector(`[name='item${i}']`)?.value || "Item";
+        const packets = parseFloat(document.querySelector(`[name='packet${i}']`)?.value) || 0;
+        const weight = parseFloat(document.querySelector(`[name='weight${i}']`)?.value) || 0;
+        const quantity = parseFloat(document.querySelector(`[name='quantity${i}']`)?.value) || 0;
+        const rate = parseFloat(document.querySelector(`[name='rate${i}']`)?.value) || 0;
+        const hamaliRate = parseFloat(document.querySelector(`[name='hamaliRate${i}']`)?.value) || 0;
+
+        const hamali = packets * hamaliRate;
+        const amount = quantity * rate;
+        const finalTotal = amount - hamali;
+
+        const totalElement = document.getElementById(`total${i}`);
+        if (totalElement) {
+          totalElement.textContent = finalTotal.toFixed(2);
+        }
+        grandTotal += finalTotal;
+
+        currentInvoice.items.push({
+          slNo: i,
+          item: itemName,
+          packet: packets,
+          weight: weight,
+          quantity: quantity,
+          rate: rate,
+          hamaliRate: hamaliRate,
+          total: finalTotal
+        });
+      }
+
+      currentInvoice.total = grandTotal;
+      document.getElementById('totalAmount').textContent = `Amount: ${grandTotal.toFixed(2)}`;
+      
+      return currentInvoice;
+    }
+
+    function exportToExcel() {
+      const currentInvoice = calculateTotals();
+      allInvoices.push(currentInvoice);
+      saveInvoices(); // Save to localStorage
+      
+      const wb = XLSX.utils.book_new();
+      const wsData = [];
+      
+      wsData.push(["Customer Name", "Date"]);
+      wsData.push([currentInvoice.customerName, currentInvoice.date]);
+      wsData.push([]);
+      wsData.push(["Sl.No", "Item", "Net Weight", "Shoot", "Rate", "Amount", "Packets", "Hamali Rate", "Final Amount"]);
+      
+      allInvoices.forEach(invoice => {
+        wsData.push([`----- Invoice for ${invoice.customerName} (${invoice.date}) -----`]);
+        wsData.push([]);
+        
+        invoice.items.forEach(item => {
+          wsData.push([
+            item.slNo,
+            item.item,
+            item.weight,
+            item.quantity,
+            item.rate,
+            item.amount,
+            item.packets,
+            item.hamaliRate,
+            item.total.toFixed(2)
+          ]);
+        });
+        
+        wsData.push([]);
+        wsData.push(["", "", "", "", "", "", "", "", "", "Subtotal:", invoice.total]);
+        wsData.push(["", "", "", "", "", "", "", "", "", "Kata:", invoice.kata]);
+        wsData.push(["", "", "", "", "", "", "", "", "", "Final Total:", invoice.total.toFixed(2)]);
+        wsData.push([]);
+        wsData.push([]);
+      });
+      
+      const ws = XLSX.utils.aoa_to_sheet(wsData);
+      XLSX.utils.book_append_sheet(wb, ws, "All Invoices");
+      
+      const today = new Date().toISOString().split('T')[0];
+      XLSX.writeFile(wb, `GVMahant_Invoices_${today}.xlsx`);
+    }
+
+    function saveAndPrint() {
+      window.print();
+    }
+
+    function updateDateTime() {
+      const now = new Date();
+      const options = { 
+        weekday: 'long', 
+        year: 'numeric', 
+        month: 'long', 
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      };
+      document.getElementById('datetime').textContent = now.toLocaleDateString('en-US', options);
+    }
+
+    function toggleInvoiceDropdown() {
+      const dropdown = document.getElementById('invoiceDropdown');
+      dropdown.classList.toggle('show');
+    }
+
+    function switchTemplate() {
+      const currentTemplate = window.location.pathname.split('/').pop();
+      if (currentTemplate === 'indexv1.html') {
+        window.location.href = 'barthe.html';
+      } else {
+        window.location.href = 'indexv1.html';
+      }
+    }
+
+    window.addEventListener('click', function(event) {
+      const dropdown = document.getElementById('invoiceDropdown');
+      const button = document.querySelector('.invoice-btn');
+      if (!button.contains(event.target) && !dropdown.contains(event.target)) {
+        dropdown.classList.remove('show');
+      }
+    });
+
+    // Initialize with 3 empty rows and load existing invoices
+    loadInvoices();
+    for (let i = 0; i < 3; i++) addRow();
+    updateDateTime();
+    setInterval(updateDateTime, 60000);
+
+    // Keyboard shortcuts
+    document.addEventListener('keydown', function (event) {
+      if (event.ctrlKey && event.key === 'Enter') {
+        addRow();
+      }
+      if (event.key === 'Enter') {
+        const activeElement = document.activeElement;
+        if (activeElement && activeElement.tagName === 'INPUT') {
+          calculateTotals();
+        }
+      }
+    });
+
+    // Auto-calculate when leaving input fields
+    document.addEventListener('focusout', function(event) {
+      if (event.target.tagName === 'INPUT') {
+        calculateTotals();
+      }
+    });
+  </script>
+</body>
+</html>
