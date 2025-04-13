@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Shoot Calculation</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.0/xlsx.full.min.js"></script>
+  <style>
+    /* Insert unified CSS here */
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      margin: 0;
+      background: #fff;
+      color: #000;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .header-text {
+      font-size: 24px;
+      font-weight: bold;
+    }
+
+    .sub-header {
+      font-size: 18px;
+      font-weight: bold;
+    }
+
+    .datetime {
+      font-size: 14px;
+      font-weight: bold;
+    }
+
+    .customer-section {
+      margin-bottom: 20px;
+    }
+
+    .customer-section label {
+      display: block;
+      font-weight: bold;
+      margin-bottom: 5px;
+    }
+
+    .customer-section input {
+      width: 100%;
+      padding: 8px;
+      border: 1px solid #000;
+      font-size: 14px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 20px;
+    }
+
+    th, td {
+      border: 1px solid #000;
+      padding: 10px;
+      text-align: center;
+      font-size: 14px;
+    }
+
+    th {
+      font-weight: bold;
+      background: #f0f0f0;
+    }
+
+    input[type="text"],
+    input[type="number"] {
+      width: 100%;
+      padding: 8px;
+      border: 1px solid #000;
+      font-size: 14px;
+      text-align: center;
+    }
+
+    input[type="number"]::-webkit-outer-spin-button,
+    input[type="number"]::-webkit-inner-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+
+    input[type="number"] {
+      -moz-appearance: textfield;
+    }
+
+    .controls,
+    .top-controls,
+    .controls-container {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin: 10px 0;
+    }
+
+    .controls-center,
+    .controls-right,
+    .button-group {
+      display: flex;
+      gap: 10px;
+    }
+
+    .btn,
+    .template-switch,
+    button {
+      padding: 10px 20px;
+      border: 1px solid #000;
+      background: #fff;
+      font-size: 14px;
+      cursor: pointer;
+    }
+
+    #totalAmount {
+      font-weight: bold;
+      font-size: 14px;
+    }
+
+    .kata-input-container {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .kata-input-container label {
+      font-weight: bold;
+    }
+
+    .kata-input-container input {
+      width: 100px;
+    }
+
+    @media print {
+      .controls,
+      .top-controls,
+      .controls-container,
+      button {
+        display: none;
+      }
+
+      input[type="text"],
+      input[type="number"] {
+        border: none;
+        padding: 0;
+        text-align: center;
+      }
+    }
+
+    @media screen and (max-width: 768px) {
+      .controls,
+      .top-controls {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .controls-center,
+      .controls-right,
+      .button-group {
+        justify-content: center;
+        margin: 10px 0;
+      }
+
+      .customer-section {
+        width: 100%;
+      }
+
+      table,
+      th,
+      td,
+      input {
+        font-size: 12px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="header-text">|ಶ್ರೀ|</div>
+    <div class="sub-header">G.V.Mahant Brothers</div>
+    <div class="datetime" id="datetime"></div>
+  </div>
+
+  <div class="top-controls">
+    <div class="button-group">
+      <button onclick="window.location.href='main.html'">Invoice</button>
+      <button onclick="handleKata()">Kata</button>
+      <button onclick="window.location.href='barthe.html'">Barthe</button>
+    </div>
+  </div>
+
+  <div class="customer-section">
+    <label for="customerName">Customer Name:</label>
+    <input type="text" id="customerName" placeholder="Enter customer name" />
+  </div>
+  
+  <div class="invoice-container">
+    <h3>Shoot Calculation</h3>
+    <table id="shootTable">
+      <thead>
+        <tr>
+          <th>Sl.No</th>
+          <th>Item</th>
+          <th>Net Weight</th>
+          <th>Shoot %</th>
+          <th>Final Weight</th>
+          <th>Rate</th>
+          <th>Packets</th>
+          <th>Hamali Rate</th>
+          <th>Final Amount</th>
+        </tr>
+      </thead>
+      <tbody id="shootTableBody">
+        <!-- rows inserted dynamically -->
+      </tbody>
+    </table>
+  </div>
+
+  <div class="controls-container">
+    <div class="controls">
+      <div class="controls-center">
+        <button onclick="addRow()">Add Row</button>
+        <button onclick="saveAndPrint()">Print Invoice</button>
+        <button onclick="exportToExcel()">Save</button>
+      </div>
+      
+      <div class="controls-right">
+        <div class="kata-input-container">
+          <label for="kataAmount">Kata Amount:</label>
+          <input type="number" id="kataAmount" min="0" step="0.01" value="0" oninput="calculateTotals()" />
+        </div>
+        <span id="totalAmount">Amount: ₹0.00</span>
+        <button onclick="calculateTotals()">Calculate</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let rowCount = 0;
+    let allInvoices = [];
+
+    function formatCurrency(amount) {
+      return new Intl.NumberFormat('en-IN', {
+        style: 'currency',
+        currency: 'INR',
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+      }).format(amount);
+    }
+
+    function formatNumber(number) {
+      return new Intl.NumberFormat('en-IN', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+      }).format(number);
+    }
+
+    function loadInvoices() {
+      const today = new Date().toISOString().split('T')[0];
+      const storedInvoices = localStorage.getItem(`shoot_invoices_${today}`);
+      if (storedInvoices) {
+        allInvoices = JSON.parse(storedInvoices);
+      }
+    }
+
+    function saveInvoices() {
+      const today = new Date().toISOString().split('T')[0];
+      localStorage.setItem(`shoot_invoices_${today}`, JSON.stringify(allInvoices));
+    }
+
+    function addRow() {
+      rowCount++;
+      const shootTbody = document.getElementById('shootTableBody');
+      const shootRow = document.createElement('tr');
+      shootRow.innerHTML = `
+        <td>${rowCount}</td>
+        <td><input type="text" name="shootItem${rowCount}" placeholder="Enter item name" /></td>
+        <td><input type="number" name="netWeight${rowCount}" min="0" step="0.01" placeholder="0.00" oninput="calculateRow(${rowCount})" /></td>
+        <td><input type="number" name="shootRate${rowCount}" min="0" step="0.01" placeholder="0.00" oninput="calculateRow(${rowCount})" /></td>
+        <td><span id="finalWeight${rowCount}" class="calculated-value">0.00</span></td>
+        <td><input type="number" name="shootFinalRate${rowCount}" min="0" step="0.01" placeholder="0.00" oninput="calculateRow(${rowCount})" /></td>
+        <td><span id="packets${rowCount}" class="calculated-value">0.00</span></td>
+        <td><input type="number" name="shootHamaliRate${rowCount}" min="0" step="0.01" placeholder="0.00" oninput="calculateRow(${rowCount})" /></td>
+        <td><span id="shootTotal${rowCount}" class="calculated-value item-total">₹0.00</span></td>
+      `;
+      shootTbody.appendChild(shootRow);
+      
+      const inputs = shootRow.getElementsByTagName('input');
+      if (inputs.length > 0) {
+        inputs[0].focus();
+      }
+    }
+
+    function calculateRow(rowNum) {
+      const netWeight = parseFloat(document.querySelector(`[name='netWeight${rowNum}']`)?.value) || 0;
+      const shootRate = parseFloat(document.querySelector(`[name='shootRate${rowNum}']`)?.value) || 0;
+      const rate = parseFloat(document.querySelector(`[name='shootFinalRate${rowNum}']`)?.value) || 0;
+      const hamaliRate = parseFloat(document.querySelector(`[name='shootHamaliRate${rowNum}']`)?.value) || 0;
+
+      const multipliedWeight = (netWeight * shootRate) / 100;
+      const finalWeight = netWeight - multipliedWeight;
+      const amount = finalWeight * rate;
+      const packets = netWeight / 60;
+      const hamaliTotal = packets * hamaliRate;
+      
+      const kataAmount = parseFloat(document.getElementById('kataAmount').value) || 0;
+      const finalTotal = amount - hamaliTotal - kataAmount;
+
+      document.getElementById(`finalWeight${rowCount}`).textContent = formatNumber(finalWeight);
+      document.getElementById(`packets${rowCount}`).textContent = formatNumber(packets);
+      document.getElementById(`shootTotal${rowCount}`).textContent = formatCurrency(finalTotal);
+
+      calculateTotals();
+    }
+
+    function calculateTotals() {
+      let grandTotal = 0;
+      const currentInvoice = {
+        date: new Date().toLocaleString('en-IN'),
+        customerName: document.getElementById('customerName').value || "Unknown Customer",
+        items: [],
+        total: 0,
+        kata: parseFloat(document.getElementById('kataAmount').value) || 0
+      };
+
+      for (let i = 1; i <= rowCount; i++) {
+        const itemName = document.querySelector(`[name='shootItem${i}']`)?.value || "";
+        if (!itemName) continue;
+
+        const netWeight = parseFloat(document.querySelector(`[name='netWeight${i}']`)?.value) || 0;
+        const shootRate = parseFloat(document.querySelector(`[name='shootRate${i}']`)?.value) || 0;
+        const rate = parseFloat(document.querySelector(`[name='shootFinalRate${i}']`)?.value) || 0;
+        const hamaliRate = parseFloat(document.querySelector(`[name='shootHamaliRate${i}']`)?.value) || 0;
+
+        const multipliedWeight = (netWeight * shootRate) / 100;
+        const finalWeight = netWeight - multipliedWeight;
+        const amount = finalWeight * rate;
+        const packets = netWeight / 60;
+        const hamaliTotal = packets * hamaliRate;
+        const kataAmount = currentInvoice.kata;
+        const finalTotal = amount - hamaliTotal - kataAmount;
+
+        grandTotal += finalTotal;
+
+        currentInvoice.items.push({
+          slNo: i,
+          item: itemName,
+          netWeight: netWeight,
+          shootRate: shootRate,
+          finalWeight: finalWeight,
+          rate: rate,
+          packets: packets,
+          hamaliRate: hamaliRate,
+          total: finalTotal
+        });
+      }
+
+      currentInvoice.total = grandTotal;
+      document.getElementById('totalAmount').textContent = `Amount: ${formatCurrency(grandTotal)}`;
+      return currentInvoice;
+    }
+
+    function exportToExcel() {
+      const currentInvoice = calculateTotals();
+      allInvoices.push(currentInvoice);
+      saveInvoices();
+      
+      const wb = XLSX.utils.book_new();
+      const wsData = [];
+      
+      wsData.push(["G.V.Mahant Brothers - Shoot Calculation"]);
+      wsData.push(["Customer Name:", currentInvoice.customerName]);
+      wsData.push(["Date:", currentInvoice.date]);
+      wsData.push([]);
+      
+      wsData.push(["Sl.No", "Item", "Net Weight", "Shoot %", "Final Weight", "Rate", "Packets", "Hamali Rate", "Final Amount"]);
+      
+      currentInvoice.items.forEach(item => {
+        wsData.push([
+          item.slNo,
+          item.item,
+          formatNumber(item.netWeight),
+          formatNumber(item.shootRate),
+          formatNumber(item.finalWeight),
+          formatNumber(item.rate),
+          formatNumber(item.packets),
+          formatNumber(item.hamaliRate),
+          formatCurrency(item.total)
+        ]);
+      });
+      
+      wsData.push([]);
+      wsData.push(["", "", "", "", "", "", "", "", "Subtotal:", formatCurrency(currentInvoice.total)]);
+      wsData.push(["", "", "", "", "", "", "", "", "Kata:", formatCurrency(currentInvoice.kata)]);
+      wsData.push(["", "", "", "", "", "", "", "", "Final Total:", formatCurrency(currentInvoice.total - currentInvoice.kata)]);
+      
+      const ws = XLSX.utils.aoa_to_sheet(wsData);
+      
+      ws['!cols'] = [
+        {wch: 6},
+        {wch: 20},
+        {wch: 12},
+        {wch: 10},
+        {wch: 12},
+        {wch: 10},
+        {wch: 10},
+        {wch: 12},
+        {wch: 15}
+      ];
+      
+      XLSX.utils.book_append_sheet(wb, ws, "Shoot Invoice");
+      
+      const today = new Date().toISOString().split('T')[0];
+      XLSX.writeFile(wb, `GVMahant_Shoot_Invoice_${today}.xlsx`);
+    }
+
+    function saveAndPrint() {
+      calculateTotals();
+      window.print();
+    }
+
+    function updateDateTime() {
+      const now = new Date();
+      const options = { 
+        weekday: 'long', 
+        year: 'numeric', 
+        month: 'long', 
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      };
+      document.getElementById('datetime').textContent = now.toLocaleDateString('en-IN', options);
+    }
+
+    function handleKata() {
+      alert('Kata functionality not implemented.');
+    }
+
+    loadInvoices();
+    for (let i = 0; i < 3; i++) addRow();
+    updateDateTime();
+    setInterval(updateDateTime, 60000);
+
+    document.addEventListener('keydown', function (event) {
+      if (event.ctrlKey && event.key === 'Enter') {
+        addRow();
+      }
+      if (event.key === 'Enter') {
+        const activeElement = document.activeElement;
+        if (activeElement && activeElement.tagName === 'INPUT') {
+          calculateTotals();
+        }
+      }
+    });
+
+    document.addEventListener('focusout', function(event) {
+      if (event.target.tagName === 'INPUT') {
+        calculateTotals();
+      }
+    });
+  </script>
+</body>
+</html>

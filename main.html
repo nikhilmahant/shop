@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Invoice</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.0/xlsx.full.min.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      margin: 0;
+      background: #fff;
+      color: #000;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .header-text {
+      font-size: 24px;
+      font-weight: bold;
+    }
+
+    .sub-header {
+      font-size: 18px;
+      font-weight: bold;
+    }
+
+    .datetime {
+      font-size: 14px;
+      font-weight: bold;
+    }
+
+    .customer-section {
+      margin-bottom: 20px;
+    }
+
+    .customer-section label {
+      display: block;
+      font-weight: bold;
+      margin-bottom: 5px;
+    }
+
+    .customer-section input {
+      width: 100%;
+      padding: 8px;
+      border: 1px solid #000;
+      font-size: 14px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 20px;
+    }
+
+    th, td {
+      border: 1px solid #000;
+      padding: 10px;
+      text-align: center;
+      font-size: 14px;
+    }
+
+    th {
+      font-weight: bold;
+      background: #f0f0f0;
+    }
+
+    input[type="text"],
+    input[type="number"] {
+      width: 100%;
+      padding: 8px;
+      border: 1px solid #000;
+      font-size: 14px;
+      text-align: center;
+    }
+
+    input[type="number"]::-webkit-outer-spin-button,
+    input[type="number"]::-webkit-inner-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+
+    input[type="number"] {
+      -moz-appearance: textfield;
+    }
+
+    .controls,
+    .top-controls,
+    .controls-container {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin: 10px 0;
+    }
+
+    .controls-center,
+    .controls-right,
+    .button-group {
+      display: flex;
+      gap: 10px;
+    }
+
+    .btn,
+    .template-switch,
+    button {
+      padding: 10px 20px;
+      border: 1px solid #000;
+      background: #fff;
+      font-size: 14px;
+      cursor: pointer;
+    }
+
+    #totalAmount {
+      font-weight: bold;
+      font-size: 14px;
+    }
+
+    .kata-input-container {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .kata-input-container label {
+      font-weight: bold;
+    }
+
+    .kata-input-container input {
+      width: 100px;
+    }
+
+    @media print {
+      .controls,
+      .top-controls,
+      .controls-container,
+      button {
+        display: none;
+      }
+
+      input[type="text"],
+      input[type="number"] {
+        border: none;
+        padding: 0;
+        text-align: center;
+      }
+    }
+
+    @media screen and (max-width: 768px) {
+      .controls,
+      .top-controls {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .controls-center,
+      .controls-right,
+      .button-group {
+        justify-content: center;
+        margin: 10px 0;
+      }
+
+      .customer-section {
+        width: 100%;
+      }
+
+      table,
+      th,
+      td,
+      input {
+        font-size: 12px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="header-text">|ಶ್ರೀ|</div>
+    <div class="sub-header">G.V.Mahant Brothers</div>
+    <div class="datetime" id="datetime"></div>
+  </div>
+  
+  <h2>Invoice</h2>
+  
+  <div class="customer-section">
+    <label for="customerName">Customer Name:</label>
+    <input type="text" id="customerName" placeholder="Enter customer name" />
+  </div>
+  
+  <div class="invoice-container">
+    <table id="itemTable">
+      <thead>
+        <tr>
+          <th>Sl.No</th>
+          <th>Item</th>
+          <th>Packet</th>
+          <th>Quantity</th>
+          <th>Rate</th>
+          <th>Hamali</th>
+          <th>Total</th>
+        </tr>
+      </thead>
+      <tbody id="itemTableBody">
+        <!-- rows inserted dynamically -->
+      </tbody>
+    </table>
+  </div>
+  
+  <div class="controls">
+    <div class="controls-center">
+      <button onclick="addRow()">Add Row</button>
+      <button onclick="saveAndPrint()">Print</button>
+    </div>
+    <div class="controls-right">
+      <span id="totalAmount">Amount: 0.00</span>
+      <button onclick="calculateTotals()">Calculate</button>
+      <button onclick="exportToExcel()">Save</button>
+    </div>
+  </div>
+
+  <script>
+    let rowCount = 0;
+    let allInvoices = [];
+
+    function loadInvoices() {
+      const today = new Date().toISOString().split('T')[0];
+      const storedInvoices = localStorage.getItem(`invoices_${today}`);
+      if (storedInvoices) {
+        allInvoices = JSON.parse(storedInvoices);
+      }
+    }
+
+    function saveInvoices() {
+      const today = new Date().toISOString().split('T')[0];
+      localStorage.setItem(`invoices_${today}`, JSON.stringify(allInvoices));
+    }
+
+    function addRow() {
+      rowCount++;
+      const tbody = document.getElementById('itemTableBody');
+      const row = document.createElement('tr');
+      row.innerHTML = `
+        <td>${rowCount}</td>
+        <td><input type="text" name="item${rowCount}" placeholder="Item name" /></td>
+        <td><input type="number" name="packet${rowCount}" min="0" step="1" placeholder="0" /></td>
+        <td><input type="number" name="quantity${rowCount}" min="0" step="1" placeholder="0" /></td>
+        <td><input type="number" name="rate${rowCount}" min="0" step="0.01" placeholder="0.00" /></td>
+        <td><input type="number" name="hamali${rowCount}" min="0" step="0.01" placeholder="0.00" /></td>
+        <td><span id="total${rowCount}" class="item-total">0.00</span></td>
+      `;
+      tbody.appendChild(row);
+      
+      const inputs = row.getElementsByTagName('input');
+      if (inputs.length > 0) {
+        inputs[0].focus();
+      }
+    }
+
+    function calculateTotals() {
+      let grandTotal = 0;
+      const currentInvoice = {
+        date: new Date().toLocaleString(),
+        customerName: document.getElementById('customerName').value || "Unknown Customer",
+        items: [],
+        total: 0
+      };
+
+      for (let i = 1; i <= rowCount; i++) {
+        const itemName = document.querySelector(`[name='item${i}']`)?.value || "Item";
+        const quantity = parseFloat(document.querySelector(`[name='quantity${i}']`)?.value) || 0;
+        const rate = parseFloat(document.querySelector(`[name='rate${i}']`)?.value) || 0;
+        const hamaliRate = parseFloat(document.querySelector(`[name='hamali${i}']`)?.value) || 0;
+        const packets = parseFloat(document.querySelector(`[name='packet${i}']`)?.value) || 0;
+
+        const subTotal = quantity * rate;
+        const hamaliTotal = packets * hamaliRate;
+        const finalTotal = subTotal + hamaliTotal;
+
+        const totalElement = document.getElementById(`total${i}`);
+        if (totalElement) {
+          totalElement.textContent = finalTotal.toFixed(2);
+        }
+        grandTotal += finalTotal;
+
+        currentInvoice.items.push({
+          slNo: i,
+          item: itemName,
+          packet: packets,
+          quantity: quantity,
+          rate: rate,
+          hamali: hamaliRate,
+          total: finalTotal
+        });
+      }
+
+      currentInvoice.total = grandTotal;
+      document.getElementById('totalAmount').textContent = `Amount: ${grandTotal.toFixed(2)}`;
+      
+      return currentInvoice;
+    }
+
+    function exportToExcel() {
+      const currentInvoice = calculateTotals();
+      allInvoices.push(currentInvoice);
+      saveInvoices();
+      
+      const wb = XLSX.utils.book_new();
+      const wsData = [];
+      
+      wsData.push(["Customer Name", "Date"]);
+      wsData.push([currentInvoice.customerName, currentInvoice.date]);
+      wsData.push([]);
+      wsData.push(["Sl.No", "Item", "Packet", "Quantity", "Rate", "Hamali", "Total"]);
+      
+      allInvoices.forEach(invoice => {
+        wsData.push([`----- Invoice for ${invoice.customerName} (${invoice.date}) -----`]);
+        wsData.push([]);
+        
+        invoice.items.forEach(item => {
+          wsData.push([
+            item.slNo,
+            item.item,
+            item.packet,
+            item.quantity,
+            item.rate,
+            item.hamali,
+            item.total.toFixed(2)
+          ]);
+        });
+        
+        wsData.push([]);
+        wsData.push(["", "", "", "", "", "Total:", invoice.total.toFixed(2)]);
+        wsData.push([]);
+        wsData.push([]);
+      });
+      
+      const ws = XLSX.utils.aoa_to_sheet(wsData);
+      XLSX.utils.book_append_sheet(wb, ws, "All Invoices");
+      
+      const today = new Date().toISOString().split('T')[0];
+      XLSX.writeFile(wb, `GVMahant_Invoices_${today}.xlsx`);
+    }
+
+    function saveAndPrint() {
+      window.print();
+    }
+
+    function updateDateTime() {
+      const now = new Date();
+      const options = { 
+        weekday: 'long', 
+        year: 'numeric', 
+        month: 'long', 
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      };
+      document.getElementById('datetime').textContent = now.toLocaleDateString('en-US', options);
+    }
+
+    loadInvoices();
+    for (let i = 0; i < 3; i++) addRow();
+    updateDateTime();
+    setInterval(updateDateTime, 60000);
+
+    document.addEventListener('keydown', function (event) {
+      if (event.ctrlKey && event.key === 'Enter') {
+        addRow();
+      }
+      if (event.key === 'Enter') {
+        const activeElement = document.activeElement;
+        if (activeElement && activeElement.tagName === 'INPUT') {
+          calculateTotals();
+        }
+      }
+    });
+
+    document.addEventListener('focusout', function(event) {
+      if (event.target.tagName === 'INPUT') {
+        calculateTotals();
+      }
+    });
+  </script>
+</body>
+</html>
