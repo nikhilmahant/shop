@@ -1,0 +1,781 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Patti Calculation - G.V.Mahant Brothers</title>
+  <!-- Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Bootstrap Icons -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+  <!-- ExcelJS -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.0/xlsx.full.min.js"></script>
+  <style>
+    :root {
+      --primary-color: #2c3e50;
+      --secondary-color: #34495e;
+      --accent-color: #3498db;
+      --success-color: #27ae60;
+      --warning-color: #f39c12;
+      --danger-color: #e74c3c;
+      --light-bg: #f8f9fa;
+      --dark-bg: #343a40;
+    }
+
+    body {
+      background-color: var(--light-bg);
+      color: var(--primary-color);
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    }
+
+    .app-container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 2rem;
+      background-color: white;
+      box-shadow: 0 0 20px rgba(0,0,0,0.1);
+      border-radius: 10px;
+    }
+
+    .header {
+      background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+      color: white;
+      padding: 2rem;
+      border-radius: 8px;
+      margin-bottom: 2rem;
+    }
+
+    .nav-pills .nav-link {
+      color: var(--primary-color);
+      border: 1px solid var(--primary-color);
+      margin: 0 0.25rem;
+      transition: all 0.3s ease;
+    }
+
+    .nav-pills .nav-link:hover {
+      background-color: var(--primary-color);
+      color: white;
+    }
+
+    .nav-pills .nav-link.active {
+      background-color: var(--primary-color);
+      color: white;
+    }
+
+    .customer-card {
+      background-color: var(--light-bg);
+      border-radius: 8px;
+      padding: 1.5rem;
+      margin-bottom: 2rem;
+    }
+
+    .table-container {
+      background-color: white;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+      overflow: hidden;
+    }
+
+    .table {
+      margin-bottom: 0;
+    }
+
+    .table thead th {
+      background-color: var(--primary-color);
+      color: white;
+      font-weight: 500;
+      border: none;
+    }
+
+    .form-control {
+      border-radius: 6px;
+      border: 1px solid #dee2e6;
+      padding: 0.5rem 0.75rem;
+      transition: border-color 0.15s ease-in-out;
+    }
+
+    .form-control:focus {
+      border-color: var(--accent-color);
+      box-shadow: 0 0 0 0.2rem rgba(52, 152, 219, 0.25);
+    }
+
+    .btn {
+      border-radius: 6px;
+      padding: 0.5rem 1rem;
+      font-weight: 500;
+      transition: all 0.3s ease;
+    }
+
+    .btn-primary {
+      background-color: var(--accent-color);
+      border-color: var(--accent-color);
+    }
+
+    .btn-success {
+      background-color: var(--success-color);
+      border-color: var(--success-color);
+    }
+
+    .total-section {
+      background-color: var(--light-bg);
+      border-radius: 8px;
+      padding: 1.5rem;
+      margin-top: 2rem;
+    }
+
+    .total-amount {
+      font-size: 1.5rem;
+      font-weight: 600;
+      color: var(--primary-color);
+    }
+
+    /* Zero value styling */
+    input[type="number"].is-zero {
+      color: #adb5bd;
+    }
+
+    /* Keep styles for number input spinners */
+    input[type="number"]::-webkit-outer-spin-button,
+    input[type="number"]::-webkit-inner-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+    input[type="number"] {
+      -moz-appearance: textfield;
+      appearance: textfield;
+    }
+
+    /* Print styles */
+    @media print {
+      body {
+        background-color: white !important;
+        font-family: monospace !important;
+        font-size: 12px !important;
+        margin: 0;
+        padding: 0;
+      }
+
+      .app-container {
+        box-shadow: none !important;
+        padding: 0 !important;
+        width: 100%;
+      }
+
+      .header {
+        background: none !important;
+        color: black !important;
+        padding: 1rem !important;
+        text-align: center;
+        border-bottom: 1px dashed #000;
+      }
+
+      .no-print {
+        display: none !important;
+      }
+
+      .table {
+        width: 100%;
+        font-size: 11px;
+        border-collapse: collapse;
+        margin-top: 10px;
+        page-break-inside: auto !important;
+      }
+
+      .table thead th {
+        background-color: #f8f9fa !important;
+        color: black !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+        border-bottom: 1px dashed #000 !important;
+      }
+
+      .table td, .table th {
+        border-color: #dee2e6 !important;
+        padding: 2px 4px;
+      }
+
+      .table tr {
+        page-break-inside: avoid !important;
+        page-break-after: auto !important;
+      }
+
+      .form-control {
+        border: none !important;
+        padding: 0 !important;
+        background-color: transparent !important;
+        font-size: 11px;
+      }
+
+      .total-section {
+        background-color: transparent !important;
+        border: 1px solid #dee2e6 !important;
+        margin-top: 10px;
+      }
+
+      .total-amount {
+        border-top: 1px dashed #000;
+        padding-top: 4px;
+        font-size: 12px;
+        font-weight: bold;
+        text-align: right;
+      }
+
+      .customer-signature {
+        text-align: center;
+        margin-top: 10px;
+      }
+
+      .signature-line {
+        border-top: 1px dashed #000;
+        width: 80%;
+        margin: 5px auto;
+      }
+
+      .verification-text {
+        font-size: 10px;
+        font-style: italic;
+        margin-top: 5px;
+      }
+
+      .customer-card {
+        font-size: 12px;
+        padding: 5px 0;
+        border-bottom: 1px dashed #000;
+      }
+
+      #datetime {
+        font-size: 11px;
+      }
+    }
+
+    /* @media print {
+      body {
+        background-color: white !important;
+      }
+
+      .app-container {
+        box-shadow: none !important;
+        padding: 0 !important;
+      }
+
+      .header {
+        background: none !important;
+        color: black !important;
+        padding: 1rem !important;
+      }
+
+      .no-print {
+        display: none !important;
+      }
+
+      .table thead th {
+        background-color: #f8f9fa !important;
+        color: black !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+
+      .table td, .table th {
+        border-color: #dee2e6 !important;
+      }
+
+      input.form-control {
+        border: none !important;
+        padding: 0 !important;
+        background-color: transparent !important;
+      }
+
+      .total-section {
+        background-color: transparent !important;
+        border: 1px solid #dee2e6 !important;
+      }
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+      .app-container {
+        padding: 1rem;
+      }
+
+      .header {
+        padding: 1.5rem;
+      }
+
+      .table-responsive {
+        border-radius: 8px;
+        overflow-x: auto;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-container">
+    <!-- Header Section -->
+    <header class="header text-center">
+      <h1 class="display-6 mb-2">|ಶ್ರೀ|</h1>
+      <h2 class="h3 mb-3">G.V.Mahant Brothers</h2>
+      <p class="fs-5 mb-0" id="datetime">Loading Date...</p>
+    </header>
+
+    <!-- Navigation -->
+    <nav class="no-print mb-4">
+      <ul class="nav nav-pills justify-content-center">
+        <li class="nav-item">
+          <a class="nav-link active" href="Patti.html">
+            <i class="bi bi-file-text"></i> Patti
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="Kata.html">
+            <i class="bi bi-calculator"></i> Kata
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="Barthe.html">
+            <i class="bi bi-journal-check"></i> Barthe
+          </a>
+        </li>
+      </ul>
+    </nav>
+
+    <!-- Customer Information -->
+    <div class="customer-card">
+      <div class="row align-items-center">
+        <div class="col-md-3">
+          <label for="customerName" class="form-label fw-bold">Customer Name</label>
+        </div>
+        <div class="col-md-9">
+          <input type="text" class="form-control" id="customerName" placeholder="Enter customer name">
+        </div>
+      </div>
+    </div>
+
+    <!-- Table Section -->
+    <div class="table-container">
+      <div class="table-responsive">
+        <table id="itemTable" class="table table-hover mb-0">
+          <thead>
+            <tr>
+              <th class="text-center" style="width: 60px">Sl.No</th>
+              <th style="min-width: 200px">Item</th>
+              <th class="text-center">Packet</th>
+              <th class="text-center">Quantity</th>
+              <th class="text-center">Rate</th>
+              <th class="text-center">Hamali</th>
+              <th class="text-center">Total</th>
+            </tr>
+          </thead>
+          <tbody id="itemTableBody">
+            <!-- rows inserted dynamically -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Controls Section -->
+    <div class="total-section">
+      <div class="row align-items-center">
+        <div class="col-md-4 no-print">
+          <div class="btn-group">
+            <button class="btn btn-success" onclick="addRow()">
+              <i class="bi bi-plus-lg"></i> Add Row
+            </button>
+            <button class="btn btn-primary" onclick="saveAndPrint()">
+              <i class="bi bi-printer"></i> Print
+            </button>
+            <button class="btn btn-secondary" onclick="exportToExcel()">
+              <i class="bi bi-file-excel"></i> Export
+            </button>
+          </div>
+        </div>
+        <div class="col-md-4 text-center">
+          <div class="customer-signature">
+            <p class="mb-0">Customer Signature</p>
+            <div class="signature-line"></div>
+            <p class="verification-text mt-2">I have thoroughly reviewed and verified all information and confirm that it is accurate and complete.</p>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="total-amount text-end" id="totalAmount">
+            Amount: ₹0.00
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bootstrap Bundle with Popper -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+  <script>
+    // Wrap entire script in a try...catch to catch early errors
+    try {
+        console.log("DEBUG: Script execution started."); // DEBUG
+
+        let rowCount = 0; // Tracks the number *intended* for naming, not necessarily current rows
+        let allInvoices = [];
+
+        function loadInvoices() {
+            console.log("DEBUG: Loading invoices..."); // DEBUG
+            const today = new Date().toISOString().split('T')[0];
+            const storedInvoices = localStorage.getItem(`invoices_${today}`);
+            if (storedInvoices) {
+                try { // Add try-catch for parsing
+                    allInvoices = JSON.parse(storedInvoices);
+                    console.log("DEBUG: Invoices loaded from localStorage:", allInvoices); // DEBUG
+                } catch (e) {
+                    console.error("DEBUG: Error parsing invoices from localStorage:", e); // DEBUG
+                    allInvoices = []; // Reset if storage is corrupt
+                }
+            } else {
+                console.log("DEBUG: No invoices found in localStorage for today."); // DEBUG
+            }
+        }
+
+        function saveInvoices() {
+            console.log("DEBUG: Saving invoices:", allInvoices); // DEBUG
+            const today = new Date().toISOString().split('T')[0];
+            try { // Add try-catch for stringify
+                localStorage.setItem(`invoices_${today}`, JSON.stringify(allInvoices));
+                console.log("DEBUG: Invoices saved."); // DEBUG
+            } catch (e) {
+                console.error("DEBUG: Error saving invoices to localStorage:", e); // DEBUG
+                alert("Error saving invoice data. Local storage might be full or unavailable."); // User feedback
+            }
+        }
+
+        function addRow() {
+            console.log("DEBUG: addRow() called."); // DEBUG
+            rowCount++; // Increment the name/id counter
+            const tbody = document.getElementById('itemTableBody');
+            if (!tbody) {
+                 console.error("DEBUG: Cannot find itemTableBody element!");
+                 return; // Stop if table body is missing
+            }
+            const currentActualRowCount = tbody.rows.length; // How many rows *currently* exist
+            const displaySlNo = currentActualRowCount + 1; // Sl.No to display
+
+            const row = document.createElement('tr');
+            // Use the incremented rowCount for unique names/ids
+            row.innerHTML = `
+                <td class="text-center align-middle">${displaySlNo}</td>
+                <td><input type="text" class="form-control form-control-sm" name="item${rowCount}" placeholder="Item name" /></td>
+                <td><input type="number" class="form-control form-control-sm text-center" name="packet${rowCount}" min="0" step="1" placeholder="0" /></td>
+                <td><input type="number" class="form-control form-control-sm text-center" name="quantity${rowCount}" min="0" step="1" placeholder="0" /></td>
+                <td><input type="number" class="form-control form-control-sm text-end" name="rate${rowCount}" min="0" step="0.01" placeholder="0.00" /></td>
+                <td><input type="number" class="form-control form-control-sm text-end" name="hamali${rowCount}" min="0" step="0.01" placeholder="0.00" /></td>
+                <td class="text-end align-middle">
+                    <span id="total${rowCount}" class="item-total fw-bold">₹0.00</span>
+                    <button class="btn btn-sm btn-danger ms-2 no-print" onclick="deleteRow(this)">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                </td>
+            `;
+            tbody.appendChild(row);
+            console.log(`DEBUG: Row added to DOM. Sl.No: ${displaySlNo}, ID Counter: ${rowCount}`); // DEBUG
+
+            const firstInput = row.querySelector('input');
+            if (firstInput) {
+                firstInput.focus();
+                console.log("DEBUG: Focused first input in new row."); // DEBUG
+            } else {
+                 console.warn("DEBUG: Could not find first input to focus in new row."); // DEBUG
+            }
+        }
+
+        function deleteRow(button) {
+            console.log("DEBUG: deleteRow() called."); // DEBUG
+            const row = button.closest('tr');
+            if (row) {
+                row.remove();
+                console.log("DEBUG: Row deleted."); // DEBUG
+                updateRowNumbers(); // Update Sl.No after deletion
+                calculateTotals(); // Recalculate totals
+            }
+        }
+
+        function updateRowNumbers() {
+            console.log("DEBUG: updateRowNumbers() called."); // DEBUG
+            const tbody = document.getElementById('itemTableBody');
+            if (!tbody) return;
+            
+            const rows = tbody.querySelectorAll('tr');
+            rows.forEach((row, index) => {
+                const slNoCell = row.cells[0];
+                if (slNoCell) {
+                    slNoCell.textContent = index + 1;
+                }
+            });
+        }
+
+        function formatCurrency(amount) {
+            // Ensure it's a number before formatting
+            const numericAmount = typeof amount === 'number' ? amount : parseFloat(amount) || 0;
+            return new Intl.NumberFormat('en-IN', {
+                style: 'currency',
+                currency: 'INR',
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            }).format(numericAmount);
+        }
+
+        function formatNumber(number) {
+            // Ensure it's a number before formatting
+            const numericValue = typeof number === 'number' ? number : parseFloat(number) || 0;
+            return new Intl.NumberFormat('en-IN', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            }).format(numericValue);
+        }
+
+        function calculateTotals() {
+            console.log("DEBUG: calculateTotals() triggered."); // DEBUG
+            let grandTotal = 0;
+            const customerName = document.getElementById('customerName').value || "Unknown Customer";
+            const currentInvoiceData = {
+                date: new Date().toLocaleString(),
+                customerName: customerName,
+                items: [],
+                total: 0
+             };
+
+            const rows = document.querySelectorAll('#itemTableBody tr');
+            console.log(`DEBUG: Found ${rows.length} rows to calculate.`); // DEBUG
+            let currentSlNo = 0;
+
+            rows.forEach((row, index) => {
+                currentSlNo++; // This is the visual Sl.No based on current order
+                console.log(`DEBUG: Processing displayed row ${currentSlNo} (DOM index ${index})`); // DEBUG
+                const slNoCell = row.cells[0];
+
+                // Find inputs within the current row context
+                const itemNameInput = row.querySelector("input[name^='item']");
+                const packetInput = row.querySelector("input[name^='packet']");
+                const quantityInput = row.querySelector("input[name^='quantity']");
+                const rateInput = row.querySelector("input[name^='rate']");
+                const hamaliInput = row.querySelector("input[name^='hamali']");
+                const totalSpan = row.querySelector("span[id^='total']"); // Find span by id starting with 'total'
+
+                // **Crucial Check:** Ensure all needed elements were found in this row
+                if (!itemNameInput || !packetInput || !quantityInput || !rateInput || !hamaliInput || !totalSpan) {
+                    console.error(`DEBUG: Error finding one or more elements in row ${currentSlNo}. Check IDs/Names/Structure. Skipping row calculation.`); // DEBUG
+                    console.error(`  Item Input found: ${!!itemNameInput}, Packet: ${!!packetInput}, Quantity: ${!!quantityInput}, Rate: ${!!rateInput}, Hamali: ${!!hamaliInput}, Total Span: ${!!totalSpan}`); // Detailed check
+                    if(totalSpan) console.error(`  Total Span ID: ${totalSpan.id}`); // What is the ID if found?
+                    if(itemNameInput) console.error(`  Item Input Name: ${itemNameInput.name}`); // What is the Name if found?
+                    return; // Skip this row if elements are missing
+                }
+
+                if (slNoCell) slNoCell.textContent = currentSlNo; // Update displayed Sl.No
+
+                const itemName = itemNameInput.value || "Item";
+                const packetsValue = packetInput.value;
+                const quantityValue = quantityInput.value;
+                const rateValue = rateInput.value;
+                const hamaliValue = hamaliInput.value;
+
+                console.log(`  Raw values: packet=${packetsValue}, quantity=${quantityValue}, rate=${rateValue}, hamali=${hamaliValue}`); // DEBUG
+
+                const packets = parseFloat(packetsValue) || 0;
+                const quantity = parseFloat(quantityValue) || 0;
+                const rate = parseFloat(rateValue) || 0;
+                const hamaliRate = parseFloat(hamaliValue) || 0;
+
+                console.log(`  Parsed values: packet=${packets}, quantity=${quantity}, rate=${rate}, hamali=${hamaliRate}`); // DEBUG
+
+                const subTotal = quantity * rate;
+                const hamaliTotal = packets * hamaliRate;
+                const finalTotal = subTotal + hamaliTotal;
+
+                console.log(`  Row ${currentSlNo} calculated total: ${finalTotal.toFixed(2)}`); // DEBUG
+
+                totalSpan.textContent = formatCurrency(finalTotal);
+                grandTotal += finalTotal;
+
+                // Get the unique ID number from the totalSpan's ID (e.g., 'total5' -> 5)
+                // This assumes the ID pattern 'total<number>' added by addRow()
+                const rowIdNumber = parseInt(totalSpan.id.replace('total', ''), 10);
+
+                currentInvoiceData.items.push({
+                    slNo: currentSlNo, // The visual sequence number
+                    rowId: isNaN(rowIdNumber) ? 0 : rowIdNumber, // The original ID number if possible
+                    item: itemName,
+                    packet: packets,
+                    quantity: quantity,
+                    rate: rate,
+                    hamali: hamaliRate,
+                    total: finalTotal
+                });
+            });
+
+            // No need to update global rowCount here, addRow manages the counter for IDs
+
+            console.log(`DEBUG: Final Grand Total: ${grandTotal.toFixed(2)}`); // DEBUG
+            const totalAmountElement = document.getElementById('totalAmount');
+            if (totalAmountElement) {
+                 totalAmountElement.textContent = `Amount: ${formatCurrency(grandTotal)}`;
+                 console.log("DEBUG: Grand total display updated."); // DEBUG
+            } else {
+                 console.error("DEBUG: Could not find totalAmount element to update display!"); // DEBUG
+            }
+
+            return currentInvoiceData; // Return calculated data for other functions
+        }
+
+        function exportToExcel() {
+            console.log("DEBUG: exportToExcel() called."); // DEBUG
+            try {
+                // Get table data
+                const table = document.getElementById('itemTable');
+                if (!table) {
+                    console.error("Table not found");
+                return;
+            }
+
+                // Create workbook
+                const wb = XLSX.utils.book_new();
+                
+                // Prepare data array
+                const data = [];
+                
+                // Add header
+                data.push(["G.V.Mahant Brothers - Patti"]);
+                data.push([`Date: ${new Date().toLocaleDateString()}`]);
+                data.push([`Customer: ${document.getElementById('customerName').value || 'N/A'}`]);
+                data.push([]);  // Empty row for spacing
+                
+                // Add table headers
+                data.push(["Sl.No", "Item", "Packet", "Quantity", "Rate", "Hamali", "Total"]);
+                
+                // Add table data
+                const rows = table.querySelectorAll('tbody tr');
+                rows.forEach((row, index) => {
+                    const rowData = [];
+                    // Sl.No
+                    rowData.push(index + 1);
+                    
+                    // Get input values from the row
+                    const inputs = row.querySelectorAll('input');
+                    inputs.forEach(input => {
+                        rowData.push(input.value || '');
+                    });
+                    
+                    // Get total
+                    const total = row.querySelector('.item-total');
+                    rowData.push(total ? total.textContent.replace('₹', '').replace(/,/g, '') : '0.00');
+                    
+                    data.push(rowData);
+                });
+                
+                // Add total amount
+                data.push([]);  // Empty row
+                const totalAmount = document.getElementById('totalAmount').textContent;
+                data.push(['', '', '', '', '', 'Total:', totalAmount.replace('Amount: ₹', '').replace(/,/g, '')]);
+                
+                // Create worksheet
+                const ws = XLSX.utils.aoa_to_sheet(data);
+                
+                // Set column widths
+                ws['!cols'] = [
+                    {wch: 8},   // Sl.No
+                    {wch: 30},  // Item
+                    {wch: 10},  // Packet
+                    {wch: 10},  // Quantity
+                    {wch: 10},  // Rate
+                    {wch: 10},  // Hamali
+                    {wch: 12}   // Total
+                ];
+                
+                // Add worksheet to workbook
+                XLSX.utils.book_append_sheet(wb, ws, "Patti");
+                
+                // Generate filename with current date and customer name
+                const date = new Date().toISOString().split('T')[0];
+                const customerName = document.getElementById('customerName').value || 'Customer';
+                const safeCustomerName = customerName.replace(/[^a-z0-9]/gi, '_');
+                const filename = `GVMahant_Patti_${safeCustomerName}_${date}.xlsx`;
+                
+                // Save file
+                XLSX.writeFile(wb, filename);
+                console.log("DEBUG: Excel file saved successfully:", filename);
+                alert(`Invoice exported to ${filename}`);
+            } catch (error) {
+                console.error("Error exporting to Excel:", error);
+                alert("Error saving file. Please try again.");
+            }
+        }
+
+        function saveAndPrint() {
+            console.log("DEBUG: saveAndPrint() called."); // DEBUG
+            calculateTotals(); // Ensure totals are correct before printing
+            console.log("DEBUG: Triggering window.print()."); // DEBUG
+            window.print();
+        }
+
+        function updateDateTime() {
+            const dtElement = document.getElementById('datetime');
+            if (dtElement) {
+                const now = new Date();
+                const options = {
+                    year: 'numeric', month: 'long', day: 'numeric',
+                    hour: '2-digit', minute: '2-digit'
+                };
+                dtElement.textContent = now.toLocaleString('en-IN', options);
+            }
+        }
+
+        // --- Initialization ---
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log("DEBUG: DOM fully loaded and parsed."); // DEBUG
+            loadInvoices(); // Load saved data first
+            updateDateTime(); // Set initial date/time
+            setInterval(updateDateTime, 60000); // Update time every minute
+
+            const itemTableBody = document.getElementById('itemTableBody');
+
+            if (!itemTableBody) {
+                console.error("CRITICAL: itemTableBody not found on DOMContentLoaded. Initialization incomplete.");
+                return;
+            }
+
+            // Add initial row only if the table is empty
+            if (itemTableBody.rows.length === 0) {
+                console.log("DEBUG: Table empty, adding 1 initial row.");
+                addRow();
+            }
+
+            calculateTotals(); // Calculate initial totals
+
+            // --- Event Listeners ---
+            const tableBody = document.getElementById('itemTableBody');
+            if(tableBody) {
+                // Use event delegation for inputs within the table
+                tableBody.addEventListener('input', function(event) {
+                    const target = event.target;
+                    if (target.tagName === 'INPUT' && target.closest('tr')) {
+                        console.log("DEBUG: Input detected in table:", target.name); // DEBUG
+                        calculateTotals();
+                    }
+                });
+            } else {
+                console.error("CRITICAL: itemTableBody not found for attaching listeners.");
+            }
+
+            // Global keyboard shortcut (Ctrl+Enter)
+            document.addEventListener('keydown', function (event) {
+                if (event.ctrlKey && event.key === 'Enter') {
+                    console.log("DEBUG: Ctrl+Enter shortcut detected."); // DEBUG
+                    event.preventDefault(); // Prevent default action
+                    addRow();
+                }
+            });
+
+            console.log("DEBUG: Initialization complete. Event listeners attached.");
+        });
+    } catch (error) {
+        // Catch any synchronous error during initial script execution
+        console.error("DEBUG: A critical error occurred during script initialization:", error); // DEBUG
+        alert("A critical error occurred loading the page. Please check the console (F12) for details."); // User feedback
+    }
+  </script>
+</body>
+</html>

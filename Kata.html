@@ -1,0 +1,807 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Kata Calculation - G.V.Mahant Brothers</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+    <!-- ExcelJS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.0/xlsx.full.min.js"></script>
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --secondary-color: #34495e;
+            --accent-color: #3498db;
+            --success-color: #27ae60;
+            --warning-color: #f39c12;
+            --danger-color: #e74c3c;
+            --light-bg: #f8f9fa;
+            --dark-bg: #343a40;
+        }
+
+        body {
+            background-color: var(--light-bg);
+            color: var(--primary-color);
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+        }
+
+        .app-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+            background-color: white;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+            border-radius: 10px;
+        }
+
+        .header {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            padding: 2rem;
+            border-radius: 8px;
+            margin-bottom: 2rem;
+        }
+
+        .nav-pills .nav-link {
+            color: var(--primary-color);
+            border: 1px solid var(--primary-color);
+            margin: 0 0.25rem;
+            transition: all 0.3s ease;
+        }
+
+        .nav-pills .nav-link:hover {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        .nav-pills .nav-link.active {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        .customer-card {
+            background-color: var(--light-bg);
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .table-container {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            overflow: hidden;
+        }
+
+        .table {
+            margin-bottom: 0;
+        }
+
+        .table thead th {
+            background-color: var(--primary-color);
+            color: white;
+            font-weight: 500;
+            border: none;
+        }
+
+        .form-control {
+            border-radius: 6px;
+            border: 1px solid #dee2e6;
+            padding: 0.5rem 0.75rem;
+            transition: border-color 0.15s ease-in-out;
+        }
+
+        .form-control:focus {
+            border-color: var(--accent-color);
+            box-shadow: 0 0 0 0.2rem rgba(52, 152, 219, 0.25);
+        }
+
+        .btn {
+            border-radius: 6px;
+            padding: 0.5rem 1rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background-color: var(--accent-color);
+            border-color: var(--accent-color);
+        }
+
+        .btn-success {
+            background-color: var(--success-color);
+            border-color: var(--success-color);
+        }
+
+        .total-section {
+            background-color: var(--light-bg);
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-top: 2rem;
+        }
+
+        .total-amount {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--primary-color);
+        }
+
+        /* Zero value styling */
+        input[type="number"].is-zero {
+            color: #adb5bd;
+        }
+
+        /* Print styles */
+        @media print {
+            body {
+                background-color: white !important;
+                font-family: monospace !important;
+                font-size: 12px !important;
+                margin: 0;
+                padding: 0;
+            }
+
+            .app-container {
+                box-shadow: none !important;
+                padding: 0 !important;
+                width: 100%;
+            }
+
+            .header {
+                background: none !important;
+                color: black !important;
+                padding: 1rem !important;
+                text-align: center;
+                border-bottom: 1px dashed #000;
+            }
+
+            .no-print {
+                display: none !important;
+            }
+
+            .table {
+                width: 100%;
+                font-size: 11px;
+                border-collapse: collapse;
+                margin-top: 10px;
+                page-break-inside: auto !important;
+            }
+
+            .table thead th {
+                background-color: #f8f9fa !important;
+                color: black !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+                border-bottom: 1px dashed #000 !important;
+            }
+
+            .table td, .table th {
+                border-color: #dee2e6 !important;
+                padding: 2px 4px;
+            }
+
+            .table tr {
+                page-break-inside: avoid !important;
+                page-break-after: auto !important;
+            }
+
+            .form-control {
+                border: none !important;
+                padding: 0 !important;
+                background-color: transparent !important;
+                font-size: 11px;
+            }
+
+            .total-section {
+                background-color: transparent !important;
+                border: 1px solid #dee2e6 !important;
+                margin-top: 10px;
+            }
+
+            .total-amount {
+                border-top: 1px dashed #000;
+                padding-top: 4px;
+                font-size: 12px;
+                font-weight: bold;
+                text-align: right;
+            }
+
+            .customer-signature {
+                text-align: center;
+                margin-top: 10px;
+            }
+
+            .signature-line {
+                border-top: 1px dashed #000;
+                width: 80%;
+                margin: 5px auto;
+            }
+
+            .verification-text {
+                font-size: 10px;
+                font-style: italic;
+                margin-top: 5px;
+            }
+
+            .customer-card {
+                font-size: 12px;
+                padding: 5px 0;
+                border-bottom: 1px dashed #000;
+            }
+
+            #datetime {
+                font-size: 11px;
+            }
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .app-container {
+                padding: 1rem;
+            }
+
+            .header {
+                padding: 1.5rem;
+            }
+
+            .table-responsive {
+                border-radius: 8px;
+                overflow-x: auto;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header Section -->
+        <header class="header text-center">
+            <h1 class="display-6 mb-2">|ಶ್ರೀ|</h1>
+            <h2 class="h3 mb-3">G.V.Mahant Brothers</h2>
+            <p class="fs-5 mb-0" id="datetime">Loading Date...</p>
+        </header>
+
+        <!-- Navigation -->
+        <nav class="no-print mb-4">
+            <ul class="nav nav-pills justify-content-center">
+                <li class="nav-item">
+                    <a class="nav-link" href="Patti.html">
+                        <i class="bi bi-file-text"></i> Patti
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link active" href="Kata.html">
+                        <i class="bi bi-calculator"></i> Kata
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="Barthe.html">
+                        <i class="bi bi-journal-check"></i> Barthe
+                    </a>
+                </li>
+            </ul>
+        </nav>
+
+        <!-- Customer Information -->
+        <div class="customer-card">
+            <div class="row align-items-center">
+                <div class="col-md-3">
+                    <label for="customerName" class="form-label fw-bold">Customer Name</label>
+                </div>
+                <div class="col-md-9">
+                    <input type="text" class="form-control" id="customerName" placeholder="Enter customer name">
+                </div>
+            </div>
+        </div>
+
+        <!-- Table Section -->
+        <div class="table-container">
+            <div class="table-responsive">
+                <table id="kataTable" class="table table-hover mb-0">
+                    <thead>
+                        <tr>
+                            <th class="text-center" style="width: 60px">Sl.No</th>
+                            <th style="min-width: 200px">Item</th>
+                            <th class="text-center">Net Weight</th>
+                            <th class="text-center">Shoot %</th>
+                            <th class="text-center">Final Weight</th>
+                            <th class="text-center">Rate</th>
+                            <th class="text-center">Packets</th>
+                            <th class="text-center">Hamali Rate</th>
+                            <th class="text-center">Amount</th>
+                        </tr>
+                    </thead>
+                    <tbody id="kataTableBody"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Controls Section -->
+        <div class="total-section">
+            <div class="row align-items-center">
+                <div class="col-md-4 no-print">
+                    <div class="btn-group">
+                        <button class="btn btn-success" onclick="addRow()">
+                            <i class="bi bi-plus-lg"></i> Add Row
+                        </button>
+                        <button class="btn btn-primary" onclick="saveAndPrint()">
+                            <i class="bi bi-printer"></i> Print
+                        </button>
+                        <button class="btn btn-secondary" onclick="exportToExcel()">
+                            <i class="bi bi-file-excel"></i> Export
+                        </button>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="customer-signature">
+                        <p class="mb-0">Customer Signature</p>
+                        <div class="signature-line"></div>
+                        <p class="verification-text mt-2">I have thoroughly reviewed and verified all information and confirm that it is accurate and complete.</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="input-group mb-2">
+                        <span class="input-group-text">Kata Amount</span>
+                        <input type="number" class="form-control text-end" id="kataAmount" min="0" step="0.01" title="Enter Kata amount">
+                    </div>
+                    <div class="total-amount text-end" id="totalAmount">
+                        Amount: ₹0.00
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Keep existing JavaScript code -->
+    <script>
+        let rowCount = 0;
+        let allInvoices = [];
+
+        /**
+         * Adds or removes the 'is-zero' class to a number input based on its value.
+         * @param {HTMLInputElement} inputElement The number input element.
+         */
+        function updateZeroFade(inputElement) {
+            if (!inputElement || inputElement.type !== 'number' || inputElement.readOnly) return;
+            if (parseFloat(inputElement.value) === 0) {
+                inputElement.classList.add('is-zero');
+            } else {
+                inputElement.classList.remove('is-zero');
+            }
+        }
+
+        function formatCurrency(amount) {
+            // Ensure it's a number before formatting
+            const numericAmount = typeof amount === 'number' ? amount : parseFloat(amount) || 0;
+            return new Intl.NumberFormat('en-IN', {
+                style: 'currency',
+                currency: 'INR',
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            }).format(numericAmount);
+        }
+
+        function formatNumber(number) {
+             // Ensure it's a number before formatting
+            const numericValue = typeof number === 'number' ? number : parseFloat(number) || 0;
+            return new Intl.NumberFormat('en-IN', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            }).format(numericValue);
+        }
+
+        function loadInvoices() {
+            const today = new Date().toISOString().split('T')[0];
+            const storedInvoices = localStorage.getItem(`shoot_invoices_${today}`);
+            if (storedInvoices) {
+                try {
+                    allInvoices = JSON.parse(storedInvoices);
+                    console.log(`DEBUG: Loaded ${allInvoices.length} shoot invoices for today.`);
+                } catch (e) {
+                    console.error("DEBUG: Error parsing shoot invoices from localStorage:", e);
+                    allInvoices = [];
+                }
+            } else {
+                 console.log("DEBUG: No shoot invoices found in localStorage for today.");
+                 allInvoices = [];
+            }
+        }
+
+        function saveInvoices() {
+            const today = new Date().toISOString().split('T')[0];
+            try {
+                localStorage.setItem(`shoot_invoices_${today}`, JSON.stringify(allInvoices));
+                 console.log("DEBUG: Shoot invoices saved.");
+            } catch (e) {
+                console.error("DEBUG: Error saving shoot invoices to localStorage:", e);
+                alert("Error saving invoice data. Storage might be full.");
+            }
+        }
+
+        function addRow() {
+            rowCount++;
+            const kataTableBody = document.getElementById('kataTableBody');
+            if (!kataTableBody) { console.error("CRITICAL: Cannot find kataTableBody!"); return; }
+
+            const kataRow = document.createElement('tr');
+            kataRow.innerHTML = `
+                <td class="text-center align-middle">${rowCount}</td>
+                <td><input type="text" class="form-control form-control-sm" name="kataItem${rowCount}" placeholder="Enter item name" /></td>
+                <td><input type="number" class="form-control form-control-sm text-end" name="netWeight${rowCount}" min="0" step="0.01" placeholder="Net Weight" /></td>
+                <td><input type="number" class="form-control form-control-sm text-end" name="shootPercent${rowCount}" min="0" max="100" step="0.01" placeholder="Shoot %" /></td>
+                <td class="text-end align-middle"><span id="finalWeight${rowCount}" class="calculated-value">0.00</span></td>
+                <td><input type="number" class="form-control form-control-sm text-end" name="rate${rowCount}" min="0" step="0.01" placeholder="Rate" /></td>
+                <td><input type="number" class="form-control form-control-sm text-end" name="packets${rowCount}" min="0" step="1" placeholder="Packets" /></td>
+                <td><input type="number" class="form-control form-control-sm text-end" name="hamaliRate${rowCount}" min="0" step="0.01" placeholder="Hamali Rate" /></td>
+                <td class="text-end align-middle">
+                    <span id="total${rowCount}" class="calculated-value item-total">₹0.00</span>
+                    <button class="btn btn-sm btn-danger ms-2 no-print" onclick="deleteRow(this)">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                </td>
+            `;
+            kataTableBody.appendChild(kataRow);
+
+            const firstInput = kataRow.querySelector('input[name^="kataItem"]');
+            if (firstInput) {
+                firstInput.focus();
+            }
+            console.log(`DEBUG: Added kata row ${rowCount}`);
+        }
+
+        function deleteRow(button) {
+            console.log("DEBUG: deleteRow() called."); // DEBUG
+            const row = button.closest('tr');
+            if (row) {
+                row.remove();
+                console.log("DEBUG: Row deleted."); // DEBUG
+                updateRowNumbers(); // Update Sl.No after deletion
+                calculateTotals(); // Recalculate totals
+            }
+        }
+
+        function updateRowNumbers() {
+            console.log("DEBUG: updateRowNumbers() called."); // DEBUG
+            const tbody = document.getElementById('kataTableBody');
+            if (!tbody) return;
+            
+            const rows = tbody.querySelectorAll('tr');
+            rows.forEach((row, index) => {
+                const slNoCell = row.cells[0];
+                if (slNoCell) {
+                    slNoCell.textContent = index + 1;
+                }
+            });
+        }
+
+        function calculateRow(rowNum) {
+            const rowElement = document.querySelector(`#kataTableBody tr:nth-child(${rowNum})`);
+            if (!rowElement) {
+                console.warn(`DEBUG: Could not find row element for rowNum ${rowNum} in calculateRow.`);
+                return;
+            }
+
+            const netWeightInput = rowElement.querySelector(`[name='netWeight${rowNum}']`);
+            const shootPercentInput = rowElement.querySelector(`[name='shootPercent${rowNum}']`);
+            const rateInput = rowElement.querySelector(`[name='rate${rowNum}']`);
+            const packetsInput = rowElement.querySelector(`[name='packets${rowNum}']`);
+            const hamaliRateInput = rowElement.querySelector(`[name='hamaliRate${rowNum}']`);
+            const finalWeightSpan = rowElement.querySelector(`#finalWeight${rowNum}`);
+            const totalSpan = rowElement.querySelector(`#total${rowNum}`);
+
+            if (!netWeightInput || !shootPercentInput || !rateInput || !packetsInput || !hamaliRateInput || !finalWeightSpan || !totalSpan) {
+                console.error(`DEBUG: Missing element(s) in row ${rowNum}. Cannot calculate.`);
+                return;
+            }
+
+            const netWeight = parseFloat(netWeightInput.value) || 0;
+            const shootPercent = parseFloat(shootPercentInput.value) || 0;
+            const rate = parseFloat(rateInput.value) || 0;
+            const packets = parseFloat(packetsInput.value) || 0;
+            const hamaliRate = parseFloat(hamaliRateInput.value) || 0;
+
+            const shootDeduction = (netWeight * shootPercent) / 100;
+            const finalWeight = netWeight - shootDeduction;
+            const amount = finalWeight * rate;
+            const hamali = packets * hamaliRate;
+            const total = amount - hamali;
+
+            finalWeightSpan.textContent = finalWeight ? formatNumber(finalWeight) : '';
+            totalSpan.textContent = total ? formatCurrency(total) : '₹0.00';
+
+            console.log(`DEBUG: Row ${rowNum} calculated`);
+            calculateTotals();
+        }
+
+        function calculateTotals() {
+            console.log("DEBUG: calculateTotals triggered.");
+            let grandTotal = 0;
+            const kataAmountInput = document.getElementById('kataAmount');
+            const totalAmountSpan = document.getElementById('totalAmount');
+            const customerNameInput = document.getElementById('customerName');
+
+            if(!kataAmountInput || !totalAmountSpan || !customerNameInput) {
+                console.error("CRITICAL: Missing essential elements in calculateTotals!");
+                return null;
+            }
+
+            const kataAmount = parseFloat(kataAmountInput.value) || 0;
+
+            const currentInvoice = {
+                date: new Date().toLocaleString('en-IN', { dateStyle: 'short', timeStyle: 'short' }),
+                customerName: customerNameInput.value || "Unknown Customer",
+                items: [],
+                kataAmount: kataAmount,
+                grandTotal: 0
+            };
+
+            const rows = document.querySelectorAll('#kataTableBody tr');
+            console.log(`DEBUG: Found ${rows.length} rows for total calculation.`);
+            
+            rows.forEach((row, index) => {
+                const rowNum = index + 1;
+                const itemInput = row.querySelector(`[name='kataItem${rowNum}']`);
+                const netWeightInput = row.querySelector(`[name='netWeight${rowNum}']`);
+                const shootPercentInput = row.querySelector(`[name='shootPercent${rowNum}']`);
+                const rateInput = row.querySelector(`[name='rate${rowNum}']`);
+                const packetsInput = row.querySelector(`[name='packets${rowNum}']`);
+                const hamaliRateInput = row.querySelector(`[name='hamaliRate${rowNum}']`);
+                
+                if (!itemInput || !netWeightInput || !shootPercentInput || !rateInput || !packetsInput || !hamaliRateInput) {
+                    console.warn(`DEBUG: Skipping row ${rowNum} due to missing elements.`);
+                    return;
+                }
+
+                const netWeight = parseFloat(netWeightInput.value) || 0;
+                const shootPercent = parseFloat(shootPercentInput.value) || 0;
+                const rate = parseFloat(rateInput.value) || 0;
+                const packets = parseFloat(packetsInput.value) || 0;
+                const hamaliRate = parseFloat(hamaliRateInput.value) || 0;
+
+                const shootDeduction = (netWeight * shootPercent) / 100;
+                const finalWeight = netWeight - shootDeduction;
+                const amount = finalWeight * rate;
+                const hamali = packets * hamaliRate;
+                const total = amount - hamali;
+
+                grandTotal += total;
+
+                currentInvoice.items.push({
+                    slNo: rowNum,
+                    item: itemInput.value || `Item ${rowNum}`,
+                    netWeight: netWeight,
+                    shootPercent: shootPercent,
+                    finalWeight: finalWeight,
+                    rate: rate,
+                    packets: packets,
+                    hamaliRate: hamaliRate,
+                    amount: amount,
+                    hamali: hamali,
+                    total: total
+                });
+            });
+
+            const finalGrandTotal = grandTotal + kataAmount;
+            currentInvoice.grandTotal = finalGrandTotal;
+            
+            totalAmountSpan.textContent = `Amount: ${formatCurrency(finalGrandTotal)}`;
+            console.log(`DEBUG: Totals calculated: GrandTotal=${finalGrandTotal.toFixed(2)}`);
+
+            return currentInvoice;
+        }
+
+        function exportToExcel() {
+            console.log("DEBUG: exportToExcel called.");
+            const currentInvoice = calculateTotals(); // Get the latest data
+
+            if (!currentInvoice) {
+                console.error("DEBUG: Calculation failed, cannot export.");
+                alert("Cannot export due to calculation error. Check console.");
+                return;
+            }
+            if (currentInvoice.items.length === 0) {
+                alert("Cannot export an empty invoice.");
+                console.log("DEBUG: Export cancelled - empty invoice.");
+                return;
+            }
+
+            // Consider adding this invoice to the list for multi-invoice export if needed
+            // Check for duplicates before pushing if desired
+            allInvoices.push(currentInvoice);
+            saveInvoices(); // Save the updated list
+
+            const wb = XLSX.utils.book_new();
+            const wsData = [];
+
+            // Header Information
+            wsData.push(["G.V.Mahant Brothers - Shoot Calculation Invoice"]);
+            wsData.push(["Customer Name:", currentInvoice.customerName]);
+            wsData.push(["Date:", currentInvoice.date]);
+            wsData.push([]); // Blank row
+
+            // Table Header
+            wsData.push(["Sl.No", "Item", "Net Weight", "Shoot %", "Final Weight", "Rate", "Packets", "Hamali Rate", "Hamali Total", "Amount", "Row Total"]);
+
+            // Item Data Rows
+            currentInvoice.items.forEach(item => {
+                wsData.push([
+                    item.slNo,
+                    item.item,
+                    formatNumber(item.netWeight),
+                    formatNumber(item.shootPercent), // Keep as percentage value
+                    formatNumber(item.finalWeight),
+                    formatNumber(item.rate),
+                    formatNumber(item.packets),
+                    formatNumber(item.hamaliRate),
+                    formatNumber(item.hamali), // Hamali cost for the row
+                    formatNumber(item.amount),      // Amount (Final Wt * Rate)
+                    formatNumber(item.total)     // Row total (Amount - Hamali)
+                ]);
+            });
+
+            wsData.push([]); // Blank row after items
+
+            // Totals Section
+            wsData.push(["", "", "", "", "", "", "", "", "", "Subtotal:", formatNumber(currentInvoice.subTotal)]);
+            wsData.push(["", "", "", "", "", "", "", "", "", "Kata:", formatNumber(-currentInvoice.kataAmount)]); // Show Kata as negative
+            wsData.push(["", "", "", "", "", "", "", "", "", "Grand Total:", formatNumber(currentInvoice.grandTotal)]);
+
+            const ws = XLSX.utils.aoa_to_sheet(wsData);
+
+            // Define Column Widths (adjust as needed)
+            ws['!cols'] = [
+                { wch: 6 },  // Sl.No
+                { wch: 25 }, // Item
+                { wch: 12 }, // Net Weight
+                { wch: 10 }, // Shoot %
+                { wch: 12 }, // Final Weight
+                { wch: 10 }, // Rate
+                { wch: 10 }, // Packets
+                { wch: 12 }, // Hamali Rate
+                { wch: 12 }, // Hamali Total
+                { wch: 12 }, // Amount
+                { wch: 15 }  // Row Total
+            ];
+
+            XLSX.utils.book_append_sheet(wb, ws, "Shoot Invoice");
+
+            // Generate Filename and Trigger Download
+            const today = new Date().toISOString().split('T')[0];
+            const filename = `GVMahant_Shoot_Invoice_${currentInvoice.customerName.replace(/[^a-z0-9]/gi, '_') || 'Customer'}_${today}.xlsx`;
+            XLSX.writeFile(wb, filename);
+            console.log(`DEBUG: Excel export initiated for ${filename}.`);
+             alert(`Invoice exported to ${filename}`);
+        }
+
+        function saveAndPrint() {
+            console.log("DEBUG: saveAndPrint called.");
+            const invoiceData = calculateTotals(); // Ensure data is current before printing
+            if (invoiceData) {
+                window.print();
+            } else {
+                 alert("Cannot print due to calculation error. Check console.");
+            }
+        }
+
+        function updateDateTime() {
+            const dtElement = document.getElementById('datetime');
+             if (dtElement) {
+                 const now = new Date();
+                 const options = {
+                     year: 'numeric', month: 'long', day: 'numeric',
+                     hour: '2-digit', minute: '2-digit' // Removed weekday for brevity
+                 };
+                 dtElement.textContent = now.toLocaleString('en-IN', options);
+             } else {
+                 console.warn("DEBUG: datetime element not found.");
+             }
+        }
+
+        // --- Initialization ---
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log("DEBUG: DOM fully loaded and parsed.");
+            loadInvoices(); // Load saved data first
+            updateDateTime(); // Set initial date/time
+            setInterval(updateDateTime, 60000); // Update time every minute
+
+             const kataTableBody = document.getElementById('kataTableBody');
+             const kataAmountInput = document.getElementById('kataAmount');
+
+             if (!kataTableBody || !kataAmountInput) {
+                  console.error("CRITICAL: kataTableBody or kataAmountInput not found on DOMContentLoaded. Initialization incomplete.");
+                  return;
+             }
+
+            // Add initial row only if the table is empty
+            if (kataTableBody.rows.length === 0) {
+                console.log("DEBUG: Table empty, adding 1 initial row.");
+                addRow();
+            } else {
+                 // Ensure fade is applied to existing rows if loaded from cache/storage
+                 console.log("DEBUG: Table not empty, applying zero fade to existing inputs.");
+                 kataTableBody.querySelectorAll('input[type="number"]').forEach(updateZeroFade);
+            }
+
+             // Apply zero fade to kata input initially
+             updateZeroFade(kataAmountInput);
+
+            calculateTotals(); // Calculate initial totals
+
+            // --- Event Listeners ---
+            const tableBody = document.getElementById('kataTableBody');
+            if(tableBody){
+                 // Use event delegation for inputs within the table
+                 tableBody.addEventListener('input', function(event) {
+                     const target = event.target;
+                     if (target.tagName === 'INPUT' && target.closest('tr')) {
+                         if (target.type === 'number') {
+                            target.classList.remove('is-zero'); // Remove fade on input
+                            // Find the row number based on the input's name attribute ending
+                            const nameMatch = target.name.match(/\d+$/);
+                            if (nameMatch) {
+                                calculateRow(parseInt(nameMatch[0], 10));
+                            }
+                         } else {
+                            // If it's the item name or other text input, just trigger full total recalc
+                            calculateTotals();
+                         }
+                     }
+                 });
+
+                 // Focus/Blur listeners for fade effect
+                 tableBody.addEventListener('focusin', function(event) {
+                    if (event.target.tagName === 'INPUT' && event.target.type === 'number') {
+                        event.target.classList.remove('is-zero');
+                    }
+                 });
+                 tableBody.addEventListener('focusout', function(event) {
+                    if (event.target.tagName === 'INPUT' && event.target.type === 'number') {
+                        updateZeroFade(event.target); // Re-apply fade if needed
+                        // Optionally, trigger calculation on blur too for safety, though input usually covers it
+                        // const nameMatch = event.target.name.match(/\d+$/);
+                        // if (nameMatch) { calculateRow(parseInt(nameMatch[0], 10)); }
+                    }
+                 });
+             } else {
+                  console.error("CRITICAL: kataTableBody not found for attaching listeners.");
+             }
+
+
+            // Listener for Kata Amount Input
+            if(kataAmountInput) {
+                kataAmountInput.addEventListener('input', () => {
+                     kataAmountInput.classList.remove('is-zero');
+                     calculateTotals();
+                });
+                 kataAmountInput.addEventListener('focus', () => kataAmountInput.classList.remove('is-zero'));
+                 kataAmountInput.addEventListener('blur', () => updateZeroFade(kataAmountInput));
+            } else {
+                console.error("CRITICAL: kataAmountInput not found for attaching listeners.");
+            }
+
+
+            // Global keyboard shortcut (Ctrl+Enter)
+            document.addEventListener('keydown', function (event) {
+                if (event.ctrlKey && event.key === 'Enter') {
+                    event.preventDefault(); // Prevent default action
+                    addRow();
+                }
+                // Optional: Recalculate on Enter key within inputs (might be too aggressive)
+                // if (event.key === 'Enter' && event.target.tagName === 'INPUT') {
+                //    event.preventDefault();
+                //    calculateTotals();
+                //    // Optionally move focus to next input
+                // }
+            });
+
+            console.log("DEBUG: Initialization complete. Event listeners attached.");
+        });
+
+    </script>
+</body>
+</html>

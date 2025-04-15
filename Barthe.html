@@ -1,0 +1,681 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Barthe Calculation - G.V.Mahant Brothers</title>
+  <!-- Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Bootstrap Icons -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+  <!-- ExcelJS -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.0/xlsx.full.min.js"></script>
+  <style>
+    :root {
+      --primary-color: #2c3e50;
+      --secondary-color: #34495e;
+      --accent-color: #3498db;
+      --success-color: #27ae60;
+      --warning-color: #f39c12;
+      --danger-color: #e74c3c;
+      --light-bg: #f8f9fa;
+      --dark-bg: #343a40;
+    }
+
+    body {
+      background-color: var(--light-bg);
+      color: var(--primary-color);
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    }
+
+    .app-container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 2rem;
+      background-color: white;
+      box-shadow: 0 0 20px rgba(0,0,0,0.1);
+      border-radius: 10px;
+    }
+
+    .header {
+      background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+      color: white;
+      padding: 2rem;
+      border-radius: 8px;
+      margin-bottom: 2rem;
+    }
+
+    .nav-pills .nav-link {
+      color: var(--primary-color);
+      border: 1px solid var(--primary-color);
+      margin: 0 0.25rem;
+      transition: all 0.3s ease;
+    }
+
+    .nav-pills .nav-link:hover {
+      background-color: var(--primary-color);
+      color: white;
+    }
+
+    .nav-pills .nav-link.active {
+      background-color: var(--primary-color);
+      color: white;
+    }
+
+    .customer-card {
+      background-color: var(--light-bg);
+      border-radius: 8px;
+      padding: 1.5rem;
+      margin-bottom: 2rem;
+    }
+
+    .table-container {
+      background-color: white;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+      overflow: hidden;
+    }
+
+    .table {
+      margin-bottom: 0;
+    }
+
+    .table thead th {
+      background-color: var(--primary-color);
+      color: white;
+      font-weight: 500;
+      border: none;
+    }
+
+    .form-control {
+      border-radius: 6px;
+      border: 1px solid #dee2e6;
+      padding: 0.5rem 0.75rem;
+      transition: border-color 0.15s ease-in-out;
+    }
+
+    .form-control:focus {
+      border-color: var(--accent-color);
+      box-shadow: 0 0 0 0.2rem rgba(52, 152, 219, 0.25);
+    }
+
+    .btn {
+      border-radius: 6px;
+      padding: 0.5rem 1rem;
+      font-weight: 500;
+      transition: all 0.3s ease;
+    }
+
+    .btn-primary {
+      background-color: var(--accent-color);
+      border-color: var(--accent-color);
+    }
+
+    .btn-success {
+      background-color: var(--success-color);
+      border-color: var(--success-color);
+    }
+
+    .total-section {
+      background-color: var(--light-bg);
+      border-radius: 8px;
+      padding: 1.5rem;
+      margin-top: 2rem;
+    }
+
+    .total-amount {
+      font-size: 1.5rem;
+      font-weight: 600;
+      color: var(--primary-color);
+    }
+
+    /* Print styles */
+    @media print {
+      body {
+        background-color: white !important;
+        font-family: monospace !important;
+        font-size: 12px !important;
+        margin: 0;
+        padding: 0;
+      }
+
+      .app-container {
+        box-shadow: none !important;
+        padding: 0 !important;
+        width: 100%;
+      }
+
+      .header {
+        background: none !important;
+        color: black !important;
+        padding: 1rem !important;
+        text-align: center;
+        border-bottom: 1px dashed #000;
+      }
+
+      .no-print {
+        display: none !important;
+      }
+
+      .table {
+        width: 100%;
+        font-size: 11px;
+        border-collapse: collapse;
+        margin-top: 10px;
+        page-break-inside: auto !important;
+      }
+
+      .table thead th {
+        background-color: #f8f9fa !important;
+        color: black !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+        border-bottom: 1px dashed #000 !important;
+      }
+
+      .table td, .table th {
+        border-color: #dee2e6 !important;
+        padding: 2px 4px;
+      }
+
+      .table tr {
+        page-break-inside: avoid !important;
+        page-break-after: auto !important;
+      }
+
+      .form-control {
+        border: none !important;
+        padding: 0 !important;
+        background-color: transparent !important;
+        font-size: 11px;
+      }
+
+      .total-section {
+        background-color: transparent !important;
+        border: 1px solid #dee2e6 !important;
+        margin-top: 10px;
+      }
+
+      .total-amount {
+        border-top: 1px dashed #000;
+        padding-top: 4px;
+        font-size: 12px;
+        font-weight: bold;
+        text-align: right;
+      }
+
+      .customer-signature {
+        text-align: center;
+        margin-top: 10px;
+      }
+
+      .signature-line {
+        border-top: 1px dashed #000;
+        width: 80%;
+        margin: 5px auto;
+      }
+
+      .verification-text {
+        font-size: 10px;
+        font-style: italic;
+        margin-top: 5px;
+      }
+
+      .customer-card {
+        font-size: 12px;
+        padding: 5px 0;
+        border-bottom: 1px dashed #000;
+      }
+
+      #datetime {
+        font-size: 11px;
+      }
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+      .app-container {
+        padding: 1rem;
+      }
+
+      .header {
+        padding: 1.5rem;
+      }
+
+      .table-responsive {
+        border-radius: 8px;
+        overflow-x: auto;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-container">
+    <!-- Header Section -->
+    <header class="header text-center">
+      <h1 class="display-6 mb-2">|ಶ್ರೀ|</h1>
+      <h2 class="h3 mb-3">G.V.Mahant Brothers</h2>
+      <p class="fs-5 mb-0" id="datetime">Loading Date...</p>
+    </header>
+
+    <!-- Navigation -->
+    <nav class="no-print mb-4">
+      <ul class="nav nav-pills justify-content-center">
+        <li class="nav-item">
+          <a class="nav-link" href="Patti.html">
+            <i class="bi bi-file-text"></i> Patti
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="Kata.html">
+            <i class="bi bi-calculator"></i> Kata
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link active" href="Barthe.html">
+            <i class="bi bi-journal-check"></i> Barthe
+          </a>
+        </li>
+      </ul>
+    </nav>
+
+    <!-- Customer Information -->
+    <div class="customer-card">
+      <div class="row align-items-center">
+        <div class="col-md-3">
+          <label for="customerName" class="form-label fw-bold">Customer Name</label>
+        </div>
+        <div class="col-md-9">
+          <input type="text" class="form-control" id="customerName" placeholder="Enter customer name">
+        </div>
+      </div>
+    </div>
+
+    <!-- Table Section -->
+    <div class="table-container">
+      <div class="table-responsive">
+        <table id="bartheTable" class="table table-hover mb-0">
+          <thead>
+            <tr>
+              <th class="text-center" style="width: 60px">Sl.No</th>
+              <th style="min-width: 200px">Item</th>
+              <th class="text-center">Packet</th>
+              <th class="text-center">Weight</th>
+              <th class="text-center">+/-</th>
+              <th class="text-center">Quantity</th>
+              <th class="text-center">Rate</th>
+              <th class="text-center">Hamali Rate</th>
+              <th class="text-center">Amount</th>
+            </tr>
+          </thead>
+          <tbody id="bartheTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Controls Section -->
+    <div class="total-section">
+      <div class="row align-items-center">
+        <div class="col-md-6 no-print">
+          <div class="btn-group">
+            <button class="btn btn-success" onclick="addRow()">
+              <i class="bi bi-plus-lg"></i> Add Row
+            </button>
+            <button class="btn btn-primary" onclick="saveAndPrint()">
+              <i class="bi bi-printer"></i> Print
+            </button>
+            <button class="btn btn-secondary" onclick="exportToExcel()">
+              <i class="bi bi-file-excel"></i> Export
+            </button>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="row">
+            <div class="col-md-6">
+              <div class="customer-signature">
+                <p class="mb-0">Customer Signature</p>
+                <div class="signature-line"></div>
+                <p class="verification-text mt-2">I have thoroughly reviewed and verified all information and confirm that it is accurate and complete.</p>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="total-amount text-end" id="totalAmount">
+                Amount: ₹0.00
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bootstrap Bundle with Popper -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+  <script>
+    let rowCount = 0;
+    let allInvoices = [];
+
+    function addRow() {
+      rowCount++;
+      const bartheTableBody = document.getElementById('bartheTableBody');
+      if (!bartheTableBody) {
+        console.error("CRITICAL: Cannot find bartheTableBody!");
+        return;
+      }
+
+      const bartheRow = document.createElement('tr');
+      bartheRow.innerHTML = `
+        <td class="text-center align-middle">${rowCount}</td>
+        <td><input type="text" class="form-control form-control-sm" name="bartheItem${rowCount}" placeholder="Enter item name" /></td>
+        <td><input type="number" class="form-control form-control-sm text-end" name="packet${rowCount}" min="0" step="1" placeholder="Packets" /></td>
+        <td><input type="number" class="form-control form-control-sm text-end" name="weight${rowCount}" min="0" step="0.01" placeholder="Weight" /></td>
+        <td><input type="number" class="form-control form-control-sm text-end" name="adjustment${rowCount}" min="0" step="0.01" placeholder="+/-" /></td>
+        <td class="text-end align-middle"><span id="quantity${rowCount}" class="calculated-value">0.00</span></td>
+        <td><input type="number" class="form-control form-control-sm text-end" name="rate${rowCount}" min="0" step="0.01" placeholder="Rate" /></td>
+        <td><input type="number" class="form-control form-control-sm text-end" name="hamaliRate${rowCount}" min="0" step="0.01" placeholder="Hamali Rate" /></td>
+        <td class="text-end align-middle">
+          <span id="total${rowCount}" class="calculated-value item-total">₹0.00</span>
+          <button class="btn btn-sm btn-danger ms-2 no-print" onclick="deleteRow(this)">
+            <i class="bi bi-trash"></i>
+          </button>
+        </td>
+      `;
+      bartheTableBody.appendChild(bartheRow);
+
+      const firstInput = bartheRow.querySelector('input[name^="bartheItem"]');
+      if (firstInput) {
+        firstInput.focus();
+      }
+      console.log(`DEBUG: Added barthe row ${rowCount}`);
+    }
+
+    function deleteRow(button) {
+      console.log("DEBUG: deleteRow() called."); // DEBUG
+      const row = button.closest('tr');
+      if (row) {
+        row.remove();
+        console.log("DEBUG: Row deleted."); // DEBUG
+        updateRowNumbers(); // Update Sl.No after deletion
+        calculateTotals(); // Recalculate totals
+      }
+    }
+
+    function updateRowNumbers() {
+      console.log("DEBUG: updateRowNumbers() called."); // DEBUG
+      const tbody = document.getElementById('bartheTableBody');
+      if (!tbody) return;
+      
+      const rows = tbody.querySelectorAll('tr');
+      rows.forEach((row, index) => {
+        const slNoCell = row.cells[0];
+        if (slNoCell) {
+          slNoCell.textContent = index + 1;
+        }
+      });
+    }
+
+    function calculateRow(rowNum) {
+      const rowElement = document.querySelector(`#bartheTableBody tr:nth-child(${rowNum})`);
+      if (!rowElement) {
+        console.warn(`DEBUG: Could not find row element for rowNum ${rowNum} in calculateRow.`);
+        return;
+      }
+
+      const packetInput = rowElement.querySelector(`[name='packet${rowNum}']`);
+      const weightInput = rowElement.querySelector(`[name='weight${rowNum}']`);
+      const adjustmentInput = rowElement.querySelector(`[name='adjustment${rowNum}']`);
+      const rateInput = rowElement.querySelector(`[name='rate${rowNum}']`);
+      const hamaliRateInput = rowElement.querySelector(`[name='hamaliRate${rowNum}']`);
+      const quantitySpan = rowElement.querySelector(`#quantity${rowNum}`);
+      const totalSpan = rowElement.querySelector(`#total${rowNum}`);
+
+      if (!packetInput || !weightInput || !adjustmentInput || !rateInput || !hamaliRateInput || !quantitySpan || !totalSpan) {
+        console.error(`DEBUG: Missing element(s) in row ${rowNum}. Cannot calculate.`);
+        return;
+      }
+
+      const packets = parseFloat(packetInput.value) || 0;
+      const weight = parseFloat(weightInput.value) || 0;
+      const adjustment = parseFloat(adjustmentInput.value) || 0;
+      const rate = parseFloat(rateInput.value) || 0;
+      const hamaliRate = parseFloat(hamaliRateInput.value) || 0;
+
+      const quantity = (packets * weight) + adjustment;
+      const amount = quantity * rate;
+      const hamali = packets * hamaliRate;
+      const total = amount - hamali;
+
+      quantitySpan.textContent = quantity ? formatNumber(quantity) : '';
+      totalSpan.textContent = total ? formatCurrency(total) : '₹0.00';
+
+      console.log(`DEBUG: Row ${rowNum} calculated`);
+      calculateTotals();
+    }
+
+    function calculateTotals() {
+      console.log("DEBUG: calculateTotals triggered.");
+      let grandTotal = 0;
+      const totalAmountSpan = document.getElementById('totalAmount');
+      const customerNameInput = document.getElementById('customerName');
+
+      if(!totalAmountSpan || !customerNameInput) {
+        console.error("CRITICAL: Missing essential elements in calculateTotals!");
+        return null;
+      }
+
+      const currentInvoice = {
+        date: new Date().toLocaleString('en-IN', { dateStyle: 'short', timeStyle: 'short' }),
+        customerName: customerNameInput.value || "Unknown Customer",
+        items: [],
+        grandTotal: 0
+      };
+
+      const rows = document.querySelectorAll('#bartheTableBody tr');
+      console.log(`DEBUG: Found ${rows.length} rows for total calculation.`);
+      
+      rows.forEach((row, index) => {
+        const rowNum = index + 1;
+        const itemInput = row.querySelector(`[name='bartheItem${rowNum}']`);
+        const packetInput = row.querySelector(`[name='packet${rowNum}']`);
+        const weightInput = row.querySelector(`[name='weight${rowNum}']`);
+        const adjustmentInput = row.querySelector(`[name='adjustment${rowNum}']`);
+        const rateInput = row.querySelector(`[name='rate${rowNum}']`);
+        const hamaliRateInput = row.querySelector(`[name='hamaliRate${rowNum}']`);
+        
+        if (!itemInput || !packetInput || !weightInput || !adjustmentInput || !rateInput || !hamaliRateInput) {
+          console.warn(`DEBUG: Skipping row ${rowNum} due to missing elements.`);
+          return;
+        }
+
+        const packets = parseFloat(packetInput.value) || 0;
+        const weight = parseFloat(weightInput.value) || 0;
+        const adjustment = parseFloat(adjustmentInput.value) || 0;
+        const rate = parseFloat(rateInput.value) || 0;
+        const hamaliRate = parseFloat(hamaliRateInput.value) || 0;
+
+        const quantity = (packets * weight) + adjustment;
+        const amount = quantity * rate;
+        const hamali = packets * hamaliRate;
+        const total = amount - hamali;
+
+        grandTotal += total;
+
+        currentInvoice.items.push({
+          slNo: rowNum,
+          item: itemInput.value || `Item ${rowNum}`,
+          packets: packets,
+          weight: weight,
+          adjustment: adjustment,
+          quantity: quantity,
+          rate: rate,
+          hamaliRate: hamaliRate,
+          amount: amount,
+          hamali: hamali,
+          total: total
+        });
+      });
+
+      currentInvoice.grandTotal = grandTotal;
+      
+      totalAmountSpan.textContent = `Amount: ${formatCurrency(grandTotal)}`;
+      console.log(`DEBUG: Totals calculated: GrandTotal=${grandTotal.toFixed(2)}`);
+
+      return currentInvoice;
+    }
+
+    function formatCurrency(amount) {
+      const numericAmount = typeof amount === 'number' ? amount : parseFloat(amount) || 0;
+      return new Intl.NumberFormat('en-IN', {
+        style: 'currency',
+        currency: 'INR',
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+      }).format(numericAmount);
+    }
+
+    function formatNumber(number) {
+      const numericValue = typeof number === 'number' ? number : parseFloat(number) || 0;
+      return new Intl.NumberFormat('en-IN', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+      }).format(numericValue);
+    }
+
+    function saveAndPrint() {
+      console.log("DEBUG: saveAndPrint called.");
+      const invoiceData = calculateTotals();
+      if (invoiceData) {
+        window.print();
+      } else {
+        alert("Cannot print due to calculation error. Check console.");
+      }
+    }
+
+    function exportToExcel() {
+      console.log("DEBUG: exportToExcel called.");
+      const currentInvoice = calculateTotals();
+
+      if (!currentInvoice) {
+        console.error("DEBUG: Calculation failed, cannot export.");
+        alert("Cannot export due to calculation error. Check console.");
+        return;
+      }
+      if (currentInvoice.items.length === 0) {
+        alert("Cannot export an empty invoice.");
+        console.log("DEBUG: Export cancelled - empty invoice.");
+        return;
+      }
+
+      allInvoices.push(currentInvoice);
+      const wb = XLSX.utils.book_new();
+      const wsData = [];
+
+      wsData.push(["G.V.Mahant Brothers - Barthe Calculation Invoice"]);
+      wsData.push(["Customer Name:", currentInvoice.customerName]);
+      wsData.push(["Date:", currentInvoice.date]);
+      wsData.push([]);
+
+      wsData.push(["Sl.No", "Item", "Packets", "Weight", "+/-", "Quantity", "Rate", "Hamali Rate", "Total"]);
+
+      currentInvoice.items.forEach(item => {
+        wsData.push([
+          item.slNo,
+          item.item,
+          formatNumber(item.packets),
+          formatNumber(item.weight),
+          formatNumber(item.adjustment),
+          formatNumber(item.quantity),
+          formatNumber(item.rate),
+          formatNumber(item.hamaliRate),
+          formatNumber(item.total)
+        ]);
+      });
+
+      wsData.push([]);
+      wsData.push(["", "", "", "", "", "", "", "Grand Total:", formatNumber(currentInvoice.grandTotal)]);
+
+      const ws = XLSX.utils.aoa_to_sheet(wsData);
+
+      ws['!cols'] = [
+        { wch: 6 },   // Sl.No
+        { wch: 25 },  // Item
+        { wch: 10 },  // Packets
+        { wch: 10 },  // Weight
+        { wch: 8 },   // +/-
+        { wch: 10 },  // Quantity
+        { wch: 10 },  // Rate
+        { wch: 10 },  // Hamali Rate
+        { wch: 15 }   // Total
+      ];
+
+      XLSX.utils.book_append_sheet(wb, ws, "Barthe Invoice");
+
+      const today = new Date().toISOString().split('T')[0];
+      const filename = `GVMahant_Barthe_Invoice_${currentInvoice.customerName.replace(/[^a-z0-9]/gi, '_') || 'Customer'}_${today}.xlsx`;
+      XLSX.writeFile(wb, filename);
+      console.log(`DEBUG: Excel export initiated for ${filename}.`);
+      alert(`Invoice exported to ${filename}`);
+    }
+
+    function updateDateTime() {
+      const dtElement = document.getElementById('datetime');
+      if (dtElement) {
+        const now = new Date();
+        const options = {
+          year: 'numeric', month: 'long', day: 'numeric',
+          hour: '2-digit', minute: '2-digit'
+        };
+        dtElement.textContent = now.toLocaleString('en-IN', options);
+      } else {
+        console.warn("DEBUG: datetime element not found.");
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      console.log("DEBUG: DOM fully loaded and parsed.");
+      updateDateTime();
+      setInterval(updateDateTime, 60000);
+
+      const bartheTableBody = document.getElementById('bartheTableBody');
+      if (!bartheTableBody) {
+        console.error("CRITICAL: bartheTableBody not found on DOMContentLoaded.");
+        return;
+      }
+
+      if (bartheTableBody.rows.length === 0) {
+        console.log("DEBUG: Table empty, adding 1 initial row.");
+        addRow();
+      }
+
+      calculateTotals();
+
+      const tableBody = document.getElementById('bartheTableBody');
+      if(tableBody) {
+        tableBody.addEventListener('input', function(event) {
+          const target = event.target;
+          if (target.tagName === 'INPUT' && target.closest('tr')) {
+            const nameMatch = target.name.match(/\d+$/);
+            if (nameMatch) {
+              calculateRow(parseInt(nameMatch[0], 10));
+            } else {
+              calculateTotals();
+            }
+          }
+        });
+      } else {
+        console.error("CRITICAL: bartheTableBody not found for attaching listeners.");
+      }
+
+      document.addEventListener('keydown', function (event) {
+        if (event.ctrlKey && event.key === 'Enter') {
+          event.preventDefault();
+          addRow();
+        }
+      });
+
+      console.log("DEBUG: Initialization complete. Event listeners attached.");
+    });
+  </script>
+</body>
+</html>
